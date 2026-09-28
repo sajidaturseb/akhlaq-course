@@ -51,7 +51,7 @@
       mask-image: linear-gradient(to bottom, #000, transparent 45%);
     }
 
-    button, textarea { font: inherit; }
+    button, textarea, input { font: inherit; }
 
     .shell {
       width: min(1080px, calc(100% - 28px));
@@ -169,7 +169,7 @@
       font: 600 1rem/1.45 Arial, sans-serif;
     }
     .option:hover { transform: translateY(-2px); border-color: var(--emerald); box-shadow: 0 10px 25px rgba(13,81,71,.09); }
-    .option:focus-visible, .primary:focus-visible, textarea:focus-visible { outline: 3px solid rgba(199,147,46,.4); outline-offset: 3px; }
+    .option:focus-visible, .primary:focus-visible, .secondary:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid rgba(199,147,46,.4); outline-offset: 3px; }
     .letter {
       flex: 0 0 34px;
       height: 34px;
@@ -198,7 +198,7 @@
     .feedback.try { color: #70302e; background: #fff0ee; border: 1px solid #e8b7b3; }
     .feedback strong { display: block; margin-bottom: 4px; }
 
-    .actions { display: flex; justify-content: flex-end; margin-top: 28px; }
+    .actions { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
     .primary {
       min-height: 48px;
       padding: 0 24px;
@@ -212,6 +212,33 @@
     }
     .primary:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
     .primary:hover:not(:disabled) { filter: brightness(1.06); }
+    .secondary {
+      min-height: 48px;
+      padding: 0 20px;
+      border: 1px solid #9fc5ba;
+      border-radius: 13px;
+      color: var(--deep);
+      background: white;
+      cursor: pointer;
+      font: 800 .95rem/1 Arial, sans-serif;
+    }
+    .secondary:hover { background: var(--mist); }
+    .student-form { max-width: 680px; margin-top: 28px; }
+    .field { display: grid; gap: 9px; margin-top: 18px; }
+    .field label { color: var(--ink); font: 800 .96rem/1.3 Arial, sans-serif; }
+    .field input {
+      width: 100%;
+      min-height: 58px;
+      padding: 14px 16px;
+      color: var(--ink);
+      background: white;
+      border: 1px solid #bfd6ce;
+      border-radius: 14px;
+      font: 1rem/1.3 Arial, sans-serif;
+    }
+    .form-note, .copy-status { color: var(--muted); font: .9rem/1.5 Arial, sans-serif; }
+    .form-note { margin: 18px 0 0; }
+    .copy-status { min-height: 1.5em; margin: 12px 0 0; text-align: right; }
 
     .task-box {
       margin-top: 28px;
@@ -344,6 +371,7 @@
     const COURSES = {1: AKHLAQ_LESSONS, 2: AKHLAQ_COURSE_2_DRAFT, 3: AKHLAQ_COURSE_3_DRAFT, 4: AKHLAQ_COURSE_4_DRAFT};
     const labels = {
       intro: 'Дәрес белән танышу',
+      registration: 'Укучы турында мәгълүмат',
       knowledge: 'Белемне тикшерү',
       situation: 'Дөрес гамәлне сайлау',
       practice: 'Гамәли бирем',
@@ -358,6 +386,7 @@
     let situation = 0;
     let lesson = null;
     let currentCourse = 1;
+    let student = {name: '', group: ''};
 
     function showHome(courseNumber = 1) {
       currentCourse = COURSES[courseNumber] ? courseNumber : 1;
@@ -411,7 +440,19 @@
           <h1>${item.title}</h1>
           <p class="lead">${item.intro}</p>
           <blockquote class="verse">${item.verse}</blockquote>
-          <div class="actions"><button class="primary" data-next>Башларга</button></div>
+          <div class="actions"><button class="secondary" type="button" id="copyLessonLink">Сылтаманы күчерергә</button><button class="primary" type="button" data-next>Башларга</button></div>
+          <p class="copy-status" id="copyStatus" aria-live="polite"></p>
+        </section>
+        <section class="screen" data-screen="registration">
+          <div class="eyebrow">Укучы турында мәгълүмат</div>
+          <h2>Тестны кем үтә?</h2>
+          <p class="lead">Нәтиҗә кемгә караганын белү өчен исем-фамилияңне һәм төркемеңне яз.</p>
+          <form class="student-form" id="studentForm">
+            <div class="field"><label for="studentName">Исем һәм фамилия</label><input id="studentName" name="studentName" maxlength="80" autocomplete="name" required></div>
+            <div class="field"><label for="studentGroup">Төркем</label><input id="studentGroup" name="studentGroup" maxlength="60" required></div>
+            <p class="form-note">Ике юлны да тутыргач кына тест башлана.</p>
+            <div class="actions"><button class="primary" type="submit">Тестны башларга</button></div>
+          </form>
         </section>
         ${item.questions.map(questionMarkup).join('')}
         <section class="screen" data-screen="practice">
@@ -431,6 +472,7 @@
         <section class="screen" data-screen="result">
           <div class="eyebrow">Дәрес тәмам</div>
           <h1>Мәә шәә Аллах, син дәресне үттең!</h1>
+          <p class="lead" id="studentResult"></p>
           <p class="lead" id="resultLead">Җавапларың буенча нәтиҗә әзер.</p>
           <div class="result-grid">
             <div class="result-item"><b id="scoreValue">0 / 4</b><span>Дөрес җавап</span></div>
@@ -454,6 +496,7 @@
       brandMeta.textContent = `${currentCourse} НЧЕ КУРС · ${courseLessons.length} ДӘРЕС`;
       document.title = `${currentCourse} нче курс · ${lesson.n} нче дәрес — Әхлак`;
       score = 0; knowledge = 0; situation = 0;
+      student = {name: '', group: ''};
       screens = [...document.querySelectorAll('.screen')];
       bindLesson();
       showScreen(0);
@@ -471,6 +514,7 @@
     }
 
     function fillResult() {
+      document.getElementById('studentResult').textContent = `${student.name} · ${student.group}`;
       document.getElementById('scoreValue').textContent = `${score} / 4`;
       document.getElementById('knowledgeValue').textContent = `${knowledge} / 2`;
       document.getElementById('situationValue').textContent = `${situation} / 2`;
@@ -510,6 +554,34 @@
             next.disabled = false;
           });
         });
+      });
+
+      document.getElementById('studentForm').addEventListener('submit', event => {
+        event.preventDefault();
+        const name = document.getElementById('studentName').value.trim();
+        const group = document.getElementById('studentGroup').value.trim();
+        if (!name || !group) return;
+        student = {name, group};
+        showScreen(Math.min(current + 1, screens.length - 1));
+      });
+
+      document.getElementById('copyLessonLink').addEventListener('click', async () => {
+        const status = document.getElementById('copyStatus');
+        try {
+          await navigator.clipboard.writeText(location.href);
+          status.textContent = 'Сылтама күчерелде.';
+        } catch (_) {
+          const field = document.createElement('textarea');
+          field.value = location.href;
+          field.setAttribute('readonly', '');
+          field.style.position = 'fixed';
+          field.style.opacity = '0';
+          document.body.appendChild(field);
+          field.select();
+          document.execCommand('copy');
+          field.remove();
+          status.textContent = 'Сылтама күчерелде.';
+        }
       });
 
       const practiceCheck = document.getElementById('practiceCheck');
