@@ -293,6 +293,32 @@
     }
     .home-button:hover { background: rgba(255,255,255,.08); }
     .course-home .lead { margin-bottom: 28px; }
+    .home-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 28px; align-items: start; }
+    .teacher-card {
+      position: sticky;
+      top: 18px;
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: white;
+      box-shadow: 0 18px 45px rgba(13,81,71,.1);
+    }
+    .teacher-card h2 { font-size: 1.7rem; }
+    .teacher-card .lead { margin: 13px 0 22px; font-size: .98rem; line-height: 1.55; }
+    .teacher-card label { display: block; margin: 18px 0 8px; font: 800 .94rem/1.3 Arial, sans-serif; }
+    .teacher-card select, .teacher-card input {
+      width: 100%;
+      min-height: 54px;
+      padding: 12px 14px;
+      color: var(--ink);
+      background: white;
+      border: 1px solid #bfd6ce;
+      border-radius: 14px;
+      font: .98rem/1.3 Arial, sans-serif;
+    }
+    .teacher-card .primary { width: 100%; margin-top: 18px; }
+    .teacher-meta { min-height: 2.8em; margin: 13px 0 0; color: var(--muted); font: .88rem/1.45 Arial, sans-serif; }
+    .teacher-status { min-height: 1.5em; margin: 11px 0 0; color: var(--emerald); text-align: center; font: 700 .86rem/1.4 Arial, sans-serif; }
     .lesson-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
     .lesson-link {
       display: grid;
@@ -325,6 +351,8 @@
       .result-grid { grid-template-columns: 1fr; }
       .option { padding: 15px 14px; }
       .lesson-grid { grid-template-columns: 1fr; }
+      .home-layout { grid-template-columns: 1fr; }
+      .teacher-card { position: static; }
       .home-button { padding-inline: 10px; }
     }
   </style>
@@ -387,6 +415,7 @@
     let lesson = null;
     let currentCourse = 1;
     let student = {name: '', group: ''};
+    let assignedGroup = '';
 
     function showHome(courseNumber = 1) {
       currentCourse = COURSES[courseNumber] ? courseNumber : 1;
@@ -399,7 +428,7 @@
       lessonChip.textContent = `${currentCourse} нче курс`;
       brandMeta.textContent = `${currentCourse} НЧЕ КУРС · ${courseLessons.length} ДӘРЕС`;
       document.title = `Әхлак курсы — ${currentCourse} нче курс`;
-      app.innerHTML = `
+      app.innerHTML = `<div class="home-layout">
         <section class="course-home">
           <div class="eyebrow">${currentCourse} нче курс</div>
           <h1>Әхлак дәресләре</h1>
@@ -407,14 +436,60 @@
           <div class="lesson-grid">
             ${courseLessons.map(item => `<a class="lesson-link" href="?course=${currentCourse}&lesson=${item.n}"><span class="lesson-number">${item.n}</span><span class="lesson-title">${item.title}</span></a>`).join('')}
           </div>
-        </section>`;
+        </section>
+        <aside class="teacher-card">
+          <div class="eyebrow">Укытучы өчен</div>
+          <h2>Дәрес сылтамасы</h2>
+          <p class="lead">Дәресне һәм төркемне сайлап, укучыга әзер сылтама җибәрегез.</p>
+          <label for="teacherLesson">Дәрес</label>
+          <select id="teacherLesson">${courseLessons.map(item => `<option value="${item.n}">${item.n} нче дәрес — ${item.title}</option>`).join('')}</select>
+          <p class="teacher-meta" id="teacherMeta"></p>
+          <label for="teacherGroup">Төркем</label>
+          <input id="teacherGroup" maxlength="60" placeholder="Мәсәлән, 2 нче төркем">
+          <button class="primary" type="button" id="teacherCopy">Сылтаманы күчерергә</button>
+          <p class="teacher-status" id="teacherStatus" aria-live="polite"></p>
+        </aside></div>`;
       app.querySelectorAll('.lesson-link').forEach(link => link.addEventListener('click', event => {
         event.preventDefault();
         const number = Number(new URL(link.href).searchParams.get('lesson'));
         history.pushState({}, '', `?course=${currentCourse}&lesson=${number}`);
         openLesson(number, currentCourse);
       }));
+      const teacherLesson = document.getElementById('teacherLesson');
+      const teacherMeta = document.getElementById('teacherMeta');
+      const updateTeacherMeta = () => {
+        const selected = courseLessons.find(item => item.n === Number(teacherLesson.value));
+        teacherMeta.textContent = selected ? `${selected.questions.length} сорау · ${selected.title}` : '';
+      };
+      teacherLesson.addEventListener('change', updateTeacherMeta);
+      updateTeacherMeta();
+      document.getElementById('teacherCopy').addEventListener('click', async () => {
+        const group = document.getElementById('teacherGroup').value.trim();
+        const url = new URL(location.href);
+        url.search = '';
+        url.searchParams.set('course', currentCourse);
+        url.searchParams.set('lesson', teacherLesson.value);
+        if (group) url.searchParams.set('group', group);
+        await copyText(url.toString());
+        document.getElementById('teacherStatus').textContent = 'Сылтама күчерелде.';
+      });
       window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (_) {
+        const field = document.createElement('textarea');
+        field.value = text;
+        field.setAttribute('readonly', '');
+        field.style.position = 'fixed';
+        field.style.opacity = '0';
+        document.body.appendChild(field);
+        field.select();
+        document.execCommand('copy');
+        field.remove();
+      }
     }
 
     function questionMarkup(item, index) {
@@ -440,8 +515,7 @@
           <h1>${item.title}</h1>
           <p class="lead">${item.intro}</p>
           <blockquote class="verse">${item.verse}</blockquote>
-          <div class="actions"><button class="secondary" type="button" id="copyLessonLink">Сылтаманы күчерергә</button><button class="primary" type="button" data-next>Башларга</button></div>
-          <p class="copy-status" id="copyStatus" aria-live="polite"></p>
+          <div class="actions"><button class="primary" type="button" data-next>Башларга</button></div>
         </section>
         <section class="screen" data-screen="registration">
           <div class="eyebrow">Укучы турында мәгълүмат</div>
@@ -449,7 +523,7 @@
           <p class="lead">Нәтиҗә кемгә караганын белү өчен исем-фамилияңне һәм төркемеңне яз.</p>
           <form class="student-form" id="studentForm">
             <div class="field"><label for="studentName">Исем һәм фамилия</label><input id="studentName" name="studentName" maxlength="80" autocomplete="name" required></div>
-            <div class="field"><label for="studentGroup">Төркем</label><input id="studentGroup" name="studentGroup" maxlength="60" required></div>
+            ${assignedGroup ? `<div class="field"><label>Төркем</label><div class="result-item"><b>${assignedGroup}</b></div></div>` : `<div class="field"><label for="studentGroup">Төркем</label><input id="studentGroup" name="studentGroup" maxlength="60" required></div>`}
             <p class="form-note">Ике юлны да тутыргач кына тест башлана.</p>
             <div class="actions"><button class="primary" type="submit">Тестны башларга</button></div>
           </form>
@@ -488,6 +562,7 @@
       currentCourse = COURSES[courseNumber] ? courseNumber : 1;
       const courseLessons = COURSES[currentCourse];
       lesson = courseLessons.find(item => item.n === number) || courseLessons[0];
+      assignedGroup = new URLSearchParams(location.search).get('group') || '';
       app.innerHTML = lessonMarkup(lesson);
       progressWrap.hidden = false;
       homeButton.hidden = true;
@@ -559,29 +634,11 @@
       document.getElementById('studentForm').addEventListener('submit', event => {
         event.preventDefault();
         const name = document.getElementById('studentName').value.trim();
-        const group = document.getElementById('studentGroup').value.trim();
+        const groupInput = document.getElementById('studentGroup');
+        const group = assignedGroup || (groupInput ? groupInput.value.trim() : '');
         if (!name || !group) return;
         student = {name, group};
         showScreen(Math.min(current + 1, screens.length - 1));
-      });
-
-      document.getElementById('copyLessonLink').addEventListener('click', async () => {
-        const status = document.getElementById('copyStatus');
-        try {
-          await navigator.clipboard.writeText(location.href);
-          status.textContent = 'Сылтама күчерелде.';
-        } catch (_) {
-          const field = document.createElement('textarea');
-          field.value = location.href;
-          field.setAttribute('readonly', '');
-          field.style.position = 'fixed';
-          field.style.opacity = '0';
-          document.body.appendChild(field);
-          field.select();
-          document.execCommand('copy');
-          field.remove();
-          status.textContent = 'Сылтама күчерелде.';
-        }
       });
 
       const practiceCheck = document.getElementById('practiceCheck');
