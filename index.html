@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="tt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d5147">
+  <title>Әхлак курсы — 1 нче курс</title>
+  <meta name="description" content="Әхлак курсының 1 нче курсы: 22 интерактив дәрес">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230d5147'/%3E%3Cpath d='M32 12l5.2 10.8L49 24.5l-8.5 8.2 2 11.6L32 38.8l-10.5 5.5 2-11.6-8.5-8.2 11.8-1.7z' fill='none' stroke='%23e3bd68' stroke-width='3'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #14342f;
+      --muted: #60736f;
+      --deep: #0d5147;
+      --deep-2: #073c35;
+      --emerald: #187565;
+      --gold: #c7932e;
+      --gold-pale: #f7ecd0;
+      --paper: #fffdf8;
+      --mist: #e8f3ef;
+      --line: #d4e5df;
+      --correct: #157254;
+      --wrong: #a5413e;
+      --shadow: 0 24px 70px rgba(13, 81, 71, .15);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(199,147,46,.16), transparent 24rem),
+        radial-gradient(circle at 96% 92%, rgba(24,117,101,.15), transparent 30rem),
+        linear-gradient(145deg, #f4faf7 0%, #eef7f3 45%, #fffaf0 100%);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .23;
+      background-image:
+        linear-gradient(30deg, transparent 47%, rgba(13,81,71,.12) 48%, rgba(13,81,71,.12) 52%, transparent 53%),
+        linear-gradient(150deg, transparent 47%, rgba(13,81,71,.12) 48%, rgba(13,81,71,.12) 52%, transparent 53%);
+      background-size: 44px 76px;
+      mask-image: linear-gradient(to bottom, #000, transparent 45%);
+    }
+
+    button, textarea { font: inherit; }
+
+    .shell {
+      width: min(1080px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 22px 0 44px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 12px 18px;
+      color: white;
+      background: linear-gradient(120deg, var(--deep-2), var(--deep));
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 22px 22px 10px 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark {
+      width: 46px;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      color: #ffe6a7;
+      border: 1px solid rgba(255,230,167,.72);
+      border-radius: 14px;
+      font-size: 25px;
+      background: rgba(255,255,255,.07);
+    }
+    .brand-name { font-size: clamp(1.15rem, 2vw, 1.45rem); font-weight: 700; }
+    .brand-meta { margin-top: 3px; color: #cfe8e1; font: 600 .82rem/1.2 Arial, sans-serif; }
+
+    .lesson-chip {
+      padding: 9px 13px;
+      border: 1px solid rgba(255,230,167,.5);
+      border-radius: 999px;
+      color: #ffedbe;
+      font: 700 .87rem/1 Arial, sans-serif;
+      white-space: nowrap;
+    }
+
+    .progress-wrap {
+      margin: 0 22px;
+      padding: 18px 20px 15px;
+      background: rgba(255,255,255,.88);
+      border-inline: 1px solid var(--line);
+    }
+    .progress-row { display: flex; justify-content: space-between; gap: 20px; font: 700 .82rem/1 Arial, sans-serif; color: var(--muted); }
+    .track { height: 8px; margin-top: 11px; overflow: hidden; border-radius: 999px; background: #dceae5; }
+    .bar { height: 100%; width: 14.285%; border-radius: inherit; background: linear-gradient(90deg, var(--gold), #e3bd68); transition: width .45s ease; }
+
+    .card {
+      min-height: 590px;
+      padding: clamp(24px, 5vw, 58px);
+      background: rgba(255,253,248,.96);
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--gold);
+      border-radius: 10px 10px 28px 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 18px;
+      color: var(--emerald);
+      font: 800 .82rem/1.2 Arial, sans-serif;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before { content: ""; width: 30px; height: 2px; background: var(--gold); }
+
+    h1, h2 { margin: 0; color: #103e37; line-height: 1.13; }
+    h1 { max-width: 820px; font-size: clamp(2rem, 5.5vw, 3.7rem); }
+    h2 { max-width: 840px; font-size: clamp(1.55rem, 3.4vw, 2.45rem); }
+
+    .lead {
+      max-width: 770px;
+      margin: 22px 0 0;
+      color: #49615c;
+      font: 1.08rem/1.72 Arial, sans-serif;
+    }
+
+    .verse {
+      margin: 30px 0 0;
+      padding: 20px 22px;
+      border-left: 4px solid var(--gold);
+      background: linear-gradient(90deg, var(--gold-pale), rgba(247,236,208,.25));
+      border-radius: 0 16px 16px 0;
+      font-size: 1.05rem;
+      line-height: 1.65;
+    }
+
+    .options { display: grid; gap: 12px; margin-top: 28px; }
+    .option {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 17px 18px;
+      text-align: left;
+      color: var(--ink);
+      background: white;
+      border: 1px solid #cfe1db;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+      font: 600 1rem/1.45 Arial, sans-serif;
+    }
+    .option:hover { transform: translateY(-2px); border-color: var(--emerald); box-shadow: 0 10px 25px rgba(13,81,71,.09); }
+    .option:focus-visible, .primary:focus-visible, textarea:focus-visible { outline: 3px solid rgba(199,147,46,.4); outline-offset: 3px; }
+    .letter {
+      flex: 0 0 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--deep);
+      background: var(--mist);
+      font: 800 .9rem/1 Arial, sans-serif;
+    }
+    .option.correct { border-color: var(--correct); background: #edf8f3; }
+    .option.correct .letter { color: white; background: var(--correct); }
+    .option.wrong { border-color: var(--wrong); background: #fff1f0; }
+    .option.wrong .letter { color: white; background: var(--wrong); }
+    .option.locked { cursor: default; transform: none; }
+
+    .feedback {
+      display: none;
+      margin-top: 20px;
+      padding: 18px 20px;
+      border-radius: 14px;
+      font: 1rem/1.58 Arial, sans-serif;
+    }
+    .feedback.show { display: block; animation: rise .3s ease; }
+    .feedback.good { color: #104f3a; background: #e7f5ef; border: 1px solid #a9d8c4; }
+    .feedback.try { color: #70302e; background: #fff0ee; border: 1px solid #e8b7b3; }
+    .feedback strong { display: block; margin-bottom: 4px; }
+
+    .actions { display: flex; justify-content: flex-end; margin-top: 28px; }
+    .primary {
+      min-height: 48px;
+      padding: 0 24px;
+      border: 0;
+      border-radius: 13px;
+      color: white;
+      background: linear-gradient(110deg, var(--deep), var(--emerald));
+      box-shadow: 0 9px 20px rgba(13,81,71,.2);
+      cursor: pointer;
+      font: 800 .98rem/1 Arial, sans-serif;
+    }
+    .primary:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
+    .primary:hover:not(:disabled) { filter: brightness(1.06); }
+
+    .task-box {
+      margin-top: 28px;
+      padding: 24px;
+      border: 1px solid #ecd9aa;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #fff8e8, #fffdf8);
+      font: 1.06rem/1.7 Arial, sans-serif;
+    }
+    .task-label { display: block; margin-bottom: 9px; color: #886319; font-weight: 800; }
+    .check-row { display: flex; gap: 12px; align-items: flex-start; margin-top: 22px; font: 600 .98rem/1.45 Arial, sans-serif; }
+    .check-row input { width: 21px; height: 21px; margin-top: 1px; accent-color: var(--deep); }
+
+    textarea {
+      width: 100%;
+      min-height: 130px;
+      margin-top: 24px;
+      padding: 17px;
+      resize: vertical;
+      color: var(--ink);
+      background: white;
+      border: 1px solid #bfd6ce;
+      border-radius: 14px;
+      font: 1rem/1.55 Arial, sans-serif;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 30px;
+    }
+    .result-item { padding: 19px; border: 1px solid var(--line); border-radius: 16px; background: #f8fcfa; }
+    .result-item b { display: block; color: var(--deep); font: 800 1.45rem/1 Arial, sans-serif; }
+    .result-item span { display: block; margin-top: 8px; color: var(--muted); font: 700 .86rem/1.35 Arial, sans-serif; }
+    .result-note { margin-top: 26px; padding: 19px 21px; color: #614b19; background: var(--gold-pale); border-radius: 15px; font: 1rem/1.55 Arial, sans-serif; }
+
+    .screen { display: none; }
+    .screen.active { display: block; animation: rise .35s ease; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+    .footer-note { margin-top: 14px; text-align: center; color: #6b7b77; font: .78rem/1.4 Arial, sans-serif; }
+
+    .home-button {
+      border: 1px solid rgba(255,230,167,.5);
+      border-radius: 999px;
+      padding: 9px 13px;
+      color: #ffedbe;
+      background: transparent;
+      cursor: pointer;
+      font: 700 .82rem/1 Arial, sans-serif;
+    }
+    .home-button:hover { background: rgba(255,255,255,.08); }
+    .course-home .lead { margin-bottom: 28px; }
+    .lesson-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+    .lesson-link {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 13px;
+      align-items: center;
+      min-height: 82px;
+      padding: 14px;
+      color: var(--ink);
+      text-decoration: none;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      box-shadow: 0 8px 22px rgba(13,81,71,.06);
+      transition: transform .16s ease, border-color .16s ease;
+    }
+    .lesson-link:hover { transform: translateY(-2px); border-color: var(--emerald); }
+    .lesson-number { display: grid; place-items: center; width: 42px; height: 42px; color: white; background: var(--deep); border-radius: 13px; font: 800 1rem/1 Arial, sans-serif; }
+    .lesson-title { font: 700 .96rem/1.4 Arial, sans-serif; }
+    .next-lesson { margin-left: 10px; }
+    [hidden] { display: none !important; }
+
+    @media (max-width: 680px) {
+      .shell { width: min(100% - 16px, 1080px); padding-top: 8px; }
+      .topbar { align-items: flex-start; border-radius: 18px 18px 8px 8px; }
+      .lesson-chip { font-size: .76rem; }
+      .brand-meta { font-size: .75rem; }
+      .progress-wrap { margin: 0 8px; padding-inline: 13px; }
+      .card { min-height: 620px; padding: 26px 18px; border-radius: 8px 8px 22px 22px; }
+      .result-grid { grid-template-columns: 1fr; }
+      .option { padding: 15px 14px; }
+      .lesson-grid { grid-template-columns: 1fr; }
+      .home-button { padding-inline: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">✦</div>
+        <div>
+          <div class="brand-name">Әхлак курсы</div>
+          <div class="brand-meta" id="brandMeta">ӘХЛАК · 4 КУРС</div>
+        </div>
+      </div>
+      <div>
+        <button class="home-button" id="homeButton" hidden>Барлык дәресләр</button>
+        <span class="lesson-chip" id="lessonChip">1 нче курс</span>
+      </div>
+    </header>
+
+    <section class="progress-wrap" id="progressWrap" aria-label="Дәрес барышы" hidden>
+      <div class="progress-row"><span id="sectionName">Дәрес белән танышу</span><span id="stepText">1 / 8</span></div>
+      <div class="track"><div class="bar" id="progressBar"></div></div>
+    </section>
+
+    <article class="card" id="app"></article>
+
+    <div class="footer-note">Укучының шәхесенә яки әхлагына билге куелмый. Белемне аңлау һәм хәлдә дөрес гамәлне тану гына тикшерелә.</div>
+  </main>
+
+  <script src="lessons.js"></script>
+  <script src="course-2.js"></script>
+  <script src="course-3.js"></script>
+  <script src="course-4.js"></script>
+  <script>
+    const app = document.getElementById('app');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressBar = document.getElementById('progressBar');
+    const stepText = document.getElementById('stepText');
+    const sectionName = document.getElementById('sectionName');
+    const lessonChip = document.getElementById('lessonChip');
+    const brandMeta = document.getElementById('brandMeta');
+    const homeButton = document.getElementById('homeButton');
+    const COURSES = {1: AKHLAQ_LESSONS, 2: AKHLAQ_COURSE_2_DRAFT, 3: AKHLAQ_COURSE_3_DRAFT, 4: AKHLAQ_COURSE_4_DRAFT};
+    const labels = {
+      intro: 'Дәрес белән танышу',
+      knowledge: 'Белемне тикшерү',
+      situation: 'Дөрес гамәлне сайлау',
+      practice: 'Гамәли бирем',
+      reflection: 'Үз-үзеңне тикшер',
+      result: 'Дәрес нәтиҗәсе'
+    };
+    const letters = ['А', 'Ә', 'Б'];
+    let screens = [];
+    let current = 0;
+    let score = 0;
+    let knowledge = 0;
+    let situation = 0;
+    let lesson = null;
+    let currentCourse = 1;
+
+    function showHome(courseNumber = 1) {
+      currentCourse = COURSES[courseNumber] ? courseNumber : 1;
+      const courseLessons = COURSES[currentCourse];
+      history.replaceState({}, '', currentCourse === 1 ? location.pathname : `?course=${currentCourse}`);
+      lesson = null;
+      progressWrap.hidden = true;
+      homeButton.hidden = true;
+      lessonChip.hidden = false;
+      lessonChip.textContent = `${currentCourse} нче курс`;
+      brandMeta.textContent = `${currentCourse} НЧЕ КУРС · ${courseLessons.length} ДӘРЕС`;
+      document.title = `Әхлак курсы — ${currentCourse} нче курс`;
+      app.innerHTML = `
+        <section class="course-home">
+          <div class="eyebrow">${currentCourse} нче курс</div>
+          <h1>Әхлак дәресләре</h1>
+          <p class="lead">${courseLessons.length} дәреснең һәрберсендә белемне тикшерү, тормыштагы хәлне аңлау, гамәли бирем һәм үз-үзеңне тикшерү бар.</p>
+          <div class="lesson-grid">
+            ${courseLessons.map(item => `<a class="lesson-link" href="?course=${currentCourse}&lesson=${item.n}"><span class="lesson-number">${item.n}</span><span class="lesson-title">${item.title}</span></a>`).join('')}
+          </div>
+        </section>`;
+      app.querySelectorAll('.lesson-link').forEach(link => link.addEventListener('click', event => {
+        event.preventDefault();
+        const number = Number(new URL(link.href).searchParams.get('lesson'));
+        history.pushState({}, '', `?course=${currentCourse}&lesson=${number}`);
+        openLesson(number, currentCourse);
+      }));
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function questionMarkup(item, index) {
+      const kind = item.t === 'k' ? 'knowledge' : 'situation';
+      const kindLabel = item.t === 'k' ? 'Белем' : 'Дөрес гамәлне сайла';
+      const number = index < 2 ? index + 1 : index - 1;
+      const options = item.o
+        .map((text, originalIndex) => ({text, correct: originalIndex === item.a}))
+        .sort(() => Math.random() - .5);
+      const correct = options.findIndex(option => option.correct);
+      return `<section class="screen question" data-screen="${kind}" data-correct="${correct}" data-explanation="${item.e}">
+        <div class="eyebrow">${kindLabel} · ${number} нче сорау</div>
+        <h2>${item.q}</h2>
+        <div class="options">${options.map((option, i) => `<button class="option" data-value="${i}"><span class="letter">${letters[i]}</span><span>${option.text}</span></button>`).join('')}</div>
+        <div class="feedback" role="status"></div>
+        <div class="actions"><button class="primary" data-next disabled>Алга</button></div>
+      </section>`;
+    }
+
+    function lessonMarkup(item) {
+      return `<section class="screen active" data-screen="intro">
+          <div class="eyebrow">Дәрес белән танышу</div>
+          <h1>${item.title}</h1>
+          <p class="lead">${item.intro}</p>
+          <blockquote class="verse">${item.verse}</blockquote>
+          <div class="actions"><button class="primary" data-next>Башларга</button></div>
+        </section>
+        ${item.questions.map(questionMarkup).join('')}
+        <section class="screen" data-screen="practice">
+          <div class="eyebrow">Гамәли бирем</div>
+          <h2>Дәрестән соң башкарырга</h2>
+          <div class="task-box"><span class="task-label">Бу атнадагы бирем</span>${item.task}</div>
+          <label class="check-row"><input type="checkbox" id="practiceCheck"><span>Биремне аңладым һәм башкарырга ниятләдем.</span></label>
+          <div class="actions"><button class="primary" data-next id="practiceNext" disabled>Алга</button></div>
+        </section>
+        <section class="screen" data-screen="reflection">
+          <div class="eyebrow">Үз-үзеңне тикшер</div>
+          <h2>${item.reflection}</h2>
+          <p class="lead">Бу җавапка билге куелмый. Ул дәрестәге фикерне үз тормышың белән бәйләргә ярдәм итә.</p>
+          <textarea id="reflection" aria-label="Минем фикерем" placeholder="Мин бүген аңладым... (теләсәң язып калдыр)"></textarea>
+          <div class="actions"><button class="primary" data-next>Нәтиҗәне күрсәтергә</button></div>
+        </section>
+        <section class="screen" data-screen="result">
+          <div class="eyebrow">Дәрес тәмам</div>
+          <h1>Мәә шәә Аллах, син дәресне үттең!</h1>
+          <p class="lead" id="resultLead">Җавапларың буенча нәтиҗә әзер.</p>
+          <div class="result-grid">
+            <div class="result-item"><b id="scoreValue">0 / 4</b><span>Дөрес җавап</span></div>
+            <div class="result-item"><b id="knowledgeValue">0 / 2</b><span>Белем</span></div>
+            <div class="result-item"><b id="situationValue">0 / 2</b><span>Хәлне аңлау</span></div>
+          </div>
+          <div class="result-note"><b>Гамәли адым:</b> нәтиҗә балл белән генә бетми. Хәзер дәрестәге биремне тормышта башкару мөһим.</div>
+          <div class="actions"><button class="primary" id="restart">Кабат үтәргә</button></div>
+        </section>`;
+    }
+
+    function openLesson(number, courseNumber = 1) {
+      currentCourse = COURSES[courseNumber] ? courseNumber : 1;
+      const courseLessons = COURSES[currentCourse];
+      lesson = courseLessons.find(item => item.n === number) || courseLessons[0];
+      app.innerHTML = lessonMarkup(lesson);
+      progressWrap.hidden = false;
+      homeButton.hidden = true;
+      lessonChip.hidden = false;
+      lessonChip.textContent = `${currentCourse} нче курс · ${lesson.n} нче дәрес`;
+      brandMeta.textContent = `${currentCourse} НЧЕ КУРС · ${courseLessons.length} ДӘРЕС`;
+      document.title = `${currentCourse} нче курс · ${lesson.n} нче дәрес — Әхлак`;
+      score = 0; knowledge = 0; situation = 0;
+      screens = [...document.querySelectorAll('.screen')];
+      bindLesson();
+      showScreen(0);
+    }
+
+    function showScreen(index) {
+      current = index;
+      screens.forEach((screen, i) => screen.classList.toggle('active', i === index));
+      const type = screens[index].dataset.screen;
+      sectionName.textContent = labels[type];
+      stepText.textContent = `${index + 1} / ${screens.length}`;
+      progressBar.style.width = `${((index + 1) / screens.length) * 100}%`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (type === 'result') fillResult();
+    }
+
+    function fillResult() {
+      document.getElementById('scoreValue').textContent = `${score} / 4`;
+      document.getElementById('knowledgeValue').textContent = `${knowledge} / 2`;
+      document.getElementById('situationValue').textContent = `${situation} / 2`;
+      const lead = document.getElementById('resultLead');
+      lead.textContent = score === 4
+        ? 'Барлык сорауларга да дөрес җавап бирдең. Белемеңне гамәл белән ныгытырга калды.'
+        : 'Нәтиҗәң яхшы башлангыч. Аңлатмаларны искә төшереп, дәресне тагын бер тапкыр үтәргә мөмкин.';
+    }
+
+    function bindLesson() {
+      document.querySelectorAll('[data-next]').forEach(button => {
+        button.addEventListener('click', () => showScreen(Math.min(current + 1, screens.length - 1)));
+      });
+
+      document.querySelectorAll('.question').forEach(question => {
+        const correct = question.dataset.correct;
+        const explanation = question.dataset.explanation;
+        const feedback = question.querySelector('.feedback');
+        const next = question.querySelector('[data-next]');
+        question.querySelectorAll('.option').forEach(option => {
+          option.addEventListener('click', () => {
+            if (question.dataset.answered) return;
+            question.dataset.answered = 'true';
+            const isCorrect = option.dataset.value === correct;
+            question.querySelectorAll('.option').forEach(item => {
+              item.classList.add('locked');
+              if (item.dataset.value === correct) item.classList.add('correct');
+            });
+            if (!isCorrect) option.classList.add('wrong');
+            if (isCorrect) {
+              score += 1;
+              if (question.dataset.screen === 'knowledge') knowledge += 1;
+              if (question.dataset.screen === 'situation') situation += 1;
+            }
+            feedback.className = `feedback show ${isCorrect ? 'good' : 'try'}`;
+            feedback.innerHTML = `<strong>${isCorrect ? 'Дөрес җавап!' : 'Бу юлы дөрес түгел.'}</strong>${explanation}`;
+            next.disabled = false;
+          });
+        });
+      });
+
+      const practiceCheck = document.getElementById('practiceCheck');
+      practiceCheck.addEventListener('change', () => {
+        document.getElementById('practiceNext').disabled = !practiceCheck.checked;
+      });
+
+      document.getElementById('restart').addEventListener('click', () => openLesson(lesson.n, currentCourse));
+    }
+
+    homeButton.addEventListener('click', showHome);
+    window.addEventListener('popstate', () => {
+      const params = new URLSearchParams(location.search);
+      const number = Number(params.get('lesson'));
+      const course = Number(params.get('course')) || 1;
+      number ? openLesson(number, course) : showHome(course);
+    });
+
+    const initialParams = new URLSearchParams(location.search);
+    const initialLesson = Number(initialParams.get('lesson'));
+    const initialCourse = Number(initialParams.get('course')) || 1;
+    initialLesson ? openLesson(initialLesson, initialCourse) : showHome(initialCourse);
+  </script>
+</body>
+</html>
