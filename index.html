@@ -319,6 +319,7 @@
     .teacher-card .primary { width: 100%; margin-top: 18px; }
     .teacher-meta { min-height: 2.8em; margin: 13px 0 0; color: var(--muted); font: .88rem/1.45 Arial, sans-serif; }
     .teacher-status { min-height: 1.5em; margin: 11px 0 0; color: var(--emerald); text-align: center; font: 700 .86rem/1.4 Arial, sans-serif; }
+    .teacher-link { display: block; margin-top: 14px; color: var(--deep); text-align: center; font: 800 .92rem/1.4 Arial, sans-serif; }
     .lesson-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
     .lesson-link {
       display: grid;
@@ -387,6 +388,7 @@
   <script src="course-2.js"></script>
   <script src="course-3.js"></script>
   <script src="course-4.js"></script>
+  <script src="config.js"></script>
   <script>
     const app = document.getElementById('app');
     const progressWrap = document.getElementById('progressWrap');
@@ -416,6 +418,11 @@
     let currentCourse = 1;
     let student = {name: '', group: ''};
     let assignedGroup = '';
+    let startedAt = 0;
+    let attemptId = '';
+    let submitted = false;
+    let answers = [];
+    const resultsEndpoint = window.AKHLAQ_RESULTS_ENDPOINT || '';
 
     function showHome(courseNumber = 1) {
       currentCourse = COURSES[courseNumber] ? courseNumber : 1;
@@ -448,6 +455,7 @@
           <input id="teacherGroup" maxlength="60" placeholder="Мәсәлән, 2 нче төркем">
           <button class="primary" type="button" id="teacherCopy">Сылтаманы күчерергә</button>
           <p class="teacher-status" id="teacherStatus" aria-live="polite"></p>
+          <a class="teacher-link" href="teacher.html">Укытучы журналын ачарга</a>
         </aside></div>`;
       app.querySelectorAll('.lesson-link').forEach(link => link.addEventListener('click', event => {
         event.preventDefault();
@@ -500,7 +508,7 @@
         .map((text, originalIndex) => ({text, correct: originalIndex === item.a}))
         .sort(() => Math.random() - .5);
       const correct = options.findIndex(option => option.correct);
-      return `<section class="screen question" data-screen="${kind}" data-correct="${correct}" data-explanation="${item.e}">
+      return `<section class="screen question" data-screen="${kind}" data-number="${index + 1}" data-correct="${correct}" data-explanation="${item.e}">
         <div class="eyebrow">${kindLabel} · ${number} нче сорау</div>
         <h2>${item.q}</h2>
         <div class="options">${options.map((option, i) => `<button class="option" data-value="${i}"><span class="letter">${letters[i]}</span><span>${option.text}</span></button>`).join('')}</div>
@@ -554,6 +562,7 @@
             <div class="result-item"><b id="situationValue">0 / 2</b><span>Хәлне аңлау</span></div>
           </div>
           <div class="result-note"><b>Гамәли адым:</b> нәтиҗә балл белән генә бетми. Хәзер дәрестәге биремне тормышта башкару мөһим.</div>
+          <p class="teacher-status" id="submissionStatus" aria-live="polite">Нәтиҗә укытучыга җибәрелә…</p>
           <div class="actions"><button class="primary" id="restart">Кабат үтәргә</button></div>
         </section>`;
     }
@@ -572,6 +581,10 @@
       document.title = `${currentCourse} нче курс · ${lesson.n} нче дәрес — Әхлак`;
       score = 0; knowledge = 0; situation = 0;
       student = {name: '', group: ''};
+      startedAt = 0;
+      attemptId = '';
+      submitted = false;
+      answers = [];
       screens = [...document.querySelectorAll('.screen')];
       bindLesson();
       showScreen(0);
@@ -585,7 +598,10 @@
       stepText.textContent = `${index + 1} / ${screens.length}`;
       progressBar.style.width = `${((index + 1) / screens.length) * 100}%`;
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      if (type === 'result') fillResult();
+      if (type === 'result') {
+        fillResult();
+        submitResult();
+      }
     }
 
     function fillResult() {
@@ -614,6 +630,12 @@
             if (question.dataset.answered) return;
             question.dataset.answered = 'true';
             const isCorrect = option.dataset.value === correct;
+            answers.push({
+              number: Number(question.dataset.number),
+              selected: option.dataset.value,
+              correct,
+              isCorrect
+            });
             question.querySelectorAll('.option').forEach(item => {
               item.classList.add('locked');
               if (item.dataset.value === correct) item.classList.add('correct');
@@ -638,6 +660,10 @@
         const group = assignedGroup || (groupInput ? groupInput.value.trim() : '');
         if (!name || !group) return;
         student = {name, group};
+        startedAt = Date.now();
+        attemptId = self.crypto && self.crypto.randomUUID
+          ? self.crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
         showScreen(Math.min(current + 1, screens.length - 1));
       });
 
@@ -647,6 +673,41 @@
       });
 
       document.getElementById('restart').addEventListener('click', () => openLesson(lesson.n, currentCourse));
+    }
+
+    async function submitResult() {
+      const status = document.getElementById('submissionStatus');
+      if (submitted) return;
+      submitted = true;
+      if (!resultsEndpoint) {
+        if (status) status.textContent = 'Нәтиҗәләрне җибәрү вакытлыча көйләнмәгән.';
+        return;
+      }
+      const payload = {
+        studentName: student.name,
+        group: student.group,
+        courseId: currentCourse,
+        lessonId: lesson.n,
+        lessonTitle: lesson.title,
+        score,
+        total: lesson.questions.length,
+        durationSeconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)),
+        attemptId,
+        answers
+      };
+      try {
+        const response = await fetch(resultsEndpoint, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.error || 'request_failed');
+        if (status) status.textContent = 'Нәтиҗә укытучыга җибәрелде.';
+      } catch (_) {
+        submitted = false;
+        if (status) status.textContent = 'Нәтиҗәне җибәреп булмады. Интернетны тикшереп, кабатлап карагыз.';
+      }
     }
 
     homeButton.addEventListener('click', showHome);
