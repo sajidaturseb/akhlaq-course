@@ -51,7 +51,7 @@
       mask-image: linear-gradient(to bottom, #000, transparent 45%);
     }
 
-    button, textarea, input { font: inherit; }
+    button, textarea, input, select { font: inherit; }
 
     .shell {
       width: min(1080px, calc(100% - 28px));
@@ -145,12 +145,24 @@
     .verse {
       margin: 30px 0 0;
       padding: 20px 22px;
-      border-left: 4px solid var(--gold);
-      background: linear-gradient(90deg, var(--gold-pale), rgba(247,236,208,.25));
+      border-left: 4px solid #79ad87;
+      background: #eef7ef;
       border-radius: 0 16px 16px 0;
       font-size: 1.05rem;
       line-height: 1.65;
     }
+    .study-text { max-width: 870px; margin-top: 30px; color: var(--ink); font: 1.08rem/1.8 Arial, sans-serif; }
+    .study-text p { margin: 0 0 18px; }
+    .study-text .quran-quote, .study-text .hadith-quote { margin: 24px 0 18px; padding: 18px 22px; border-left: 4px solid; border-radius: 0 16px 16px 0; }
+    .study-text .quran-quote { border-color: #79ad87; background: #eef7ef; }
+    .study-text .hadith-quote { border-color: #d6b262; background: #fff8e9; }
+    .study-text .quran-quote strong, .study-text .hadith-quote strong { font-weight: 800; }
+    .review-list { max-width: 870px; margin-top: 34px; }
+    .review-list h2 { margin-bottom: 18px; font-size: clamp(1.45rem, 3vw, 2rem); }
+    .review-list details { margin-bottom: 10px; padding: 16px 20px; border: 1px solid #cfe1db; border-radius: 14px; background: white; }
+    .review-list summary { cursor: pointer; font: 700 1.05rem/1.5 Arial, sans-serif; }
+    .review-list details p { margin: 12px 0 0; color: #49615c; line-height: 1.6; }
+    .review-prompt { margin-bottom: 10px; padding: 16px 20px; border: 1px solid #cfe1db; border-radius: 14px; background: white; font: 700 1.05rem/1.5 Arial, sans-serif; }
 
     .options { display: grid; gap: 12px; margin-top: 28px; }
     .option {
@@ -169,7 +181,7 @@
       font: 600 1rem/1.45 Arial, sans-serif;
     }
     .option:hover { transform: translateY(-2px); border-color: var(--emerald); box-shadow: 0 10px 25px rgba(13,81,71,.09); }
-    .option:focus-visible, .primary:focus-visible, .secondary:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid rgba(199,147,46,.4); outline-offset: 3px; }
+    .option:focus-visible, .primary:focus-visible, .secondary:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(199,147,46,.4); outline-offset: 3px; }
     .letter {
       flex: 0 0 34px;
       height: 34px;
@@ -226,7 +238,7 @@
     .student-form { max-width: 680px; margin-top: 28px; }
     .field { display: grid; gap: 9px; margin-top: 18px; }
     .field label { color: var(--ink); font: 800 .96rem/1.3 Arial, sans-serif; }
-    .field input {
+    .field input, .field select {
       width: 100%;
       min-height: 58px;
       padding: 14px 16px;
@@ -316,6 +328,10 @@
       border-radius: 14px;
       font: .98rem/1.3 Arial, sans-serif;
     }
+    #studentGroup, #teacherGroup { min-height: 62px; font: 800 1.08rem/1.3 Arial, sans-serif; }
+    #studentGroup option, #teacherGroup option { font-weight: 700; }
+    #studentGroup optgroup, #teacherGroup optgroup { font-weight: 800; }
+    .field .result-item b { font-size: 1.08rem; font-weight: 800; }
     .teacher-card .primary { width: 100%; margin-top: 18px; }
     .teacher-meta { min-height: 2.8em; margin: 13px 0 0; color: var(--muted); font: .88rem/1.45 Arial, sans-serif; }
     .teacher-status { min-height: 1.5em; margin: 11px 0 0; color: var(--emerald); text-align: center; font: 700 .86rem/1.4 Arial, sans-serif; }
@@ -344,8 +360,9 @@
 
     @media (max-width: 680px) {
       .shell { width: min(100% - 16px, 1080px); padding-top: 8px; }
-      .topbar { align-items: flex-start; border-radius: 18px 18px 8px 8px; }
-      .lesson-chip { font-size: .76rem; }
+      .topbar { align-items: flex-start; flex-wrap: wrap; border-radius: 18px 18px 8px 8px; }
+      .brand { min-width: 0; }
+      .lesson-chip { margin-left: auto; font-size: .76rem; white-space: normal; }
       .brand-meta { font-size: .75rem; }
       .progress-wrap { margin: 0 8px; padding-inline: 13px; }
       .card { min-height: 620px; padding: 26px 18px; border-radius: 8px 8px 22px 22px; }
@@ -384,10 +401,12 @@
     <div class="footer-note">Укучының шәхесенә яки әхлагына билге куелмый. Белемне аңлау һәм хәлдә дөрес гамәлне тану гына тикшерелә.</div>
   </main>
 
-  <script src="lessons.js"></script>
+  <script src="lessons.js?v=study-groups-20261005"></script>
   <script src="course-2.js"></script>
   <script src="course-3.js"></script>
   <script src="course-4.js"></script>
+  <script src="study-texts.js?v=study-groups-20261005"></script>
+  <script src="review-curated.js?v=study-groups-20261005"></script>
   <script src="config.js"></script>
   <script>
     const app = document.getElementById('app');
@@ -399,8 +418,34 @@
     const brandMeta = document.getElementById('brandMeta');
     const homeButton = document.getElementById('homeButton');
     const COURSES = {1: AKHLAQ_LESSONS, 2: AKHLAQ_COURSE_2_DRAFT, 3: AKHLAQ_COURSE_3_DRAFT, 4: AKHLAQ_COURSE_4_DRAFT};
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[char]));
+    for (const [courseNumber, courseLessons] of Object.entries(COURSES)) {
+      for (const item of courseLessons) {
+        const source = window.AKHLAQ_STUDY[courseNumber]?.[item.n];
+        if (!source) continue;
+        if (!item.study) item.study = source.study;
+        item.review = window.AKHLAQ_REVIEW_CURATED[courseNumber]?.[item.n] || item.review || source.review;
+      }
+    }
+    function groupValues(courseNumber) {
+      return [
+        {label: `${courseNumber} курс`, count: 8},
+        {label: `Онлайн ${courseNumber} курс`, count: 10}
+      ];
+    }
+    function allowedGroups(courseNumber) {
+      return new Set(groupValues(courseNumber).flatMap(({label, count}) =>
+        Array.from({length: count}, (_, index) => `${label} — ${index + 1} группа`)));
+    }
+    function groupOptions(courseNumber, placeholder) {
+      return `<option value="">${placeholder}</option>` + groupValues(courseNumber).map(({label, count}) =>
+        `<optgroup label="${label}">${Array.from({length: count}, (_, index) => {
+          const value = `${label} — ${index + 1} группа`;
+          return `<option value="${value}">${value}</option>`;
+        }).join('')}</optgroup>`).join('');
+    }
     const labels = {
-      intro: 'Дәрес белән танышу',
+      intro: 'Дәрес тексты һәм кабатлау',
       registration: 'Укучы турында мәгълүмат',
       knowledge: 'Белемне тикшерү',
       situation: 'Дөрес гамәлне сайлау',
@@ -439,7 +484,7 @@
         <section class="course-home">
           <div class="eyebrow">${currentCourse} нче курс</div>
           <h1>Әхлак дәресләре</h1>
-          <p class="lead">${courseLessons.length} дәреснең һәрберсендә белемне тикшерү, тормыштагы хәлне аңлау, гамәли бирем һәм үз-үзеңне тикшерү бар.</p>
+          <p class="lead">${courseLessons.length} дәреснең һәрберсендә уку өчен текст, кабатлау сораулары, белемне һәм тормыштагы хәлне аңлауны тикшерү бар.</p>
           <div class="lesson-grid">
             ${courseLessons.map(item => `<a class="lesson-link" href="?course=${currentCourse}&lesson=${item.n}"><span class="lesson-number">${item.n}</span><span class="lesson-title">${item.title}</span></a>`).join('')}
           </div>
@@ -447,12 +492,12 @@
         <aside class="teacher-card">
           <div class="eyebrow">Укытучы өчен</div>
           <h2>Дәрес сылтамасы</h2>
-          <p class="lead">Дәресне һәм төркемне сайлап, укучыга әзер сылтама җибәрегез.</p>
+          <p class="lead">Выберите урок и группу, затем отправьте готовую ссылку ученику.</p>
           <label for="teacherLesson">Дәрес</label>
           <select id="teacherLesson">${courseLessons.map(item => `<option value="${item.n}">${item.n} нче дәрес — ${item.title}</option>`).join('')}</select>
           <p class="teacher-meta" id="teacherMeta"></p>
-          <label for="teacherGroup">Төркем</label>
-          <input id="teacherGroup" maxlength="60" placeholder="Мәсәлән, 2 нче төркем">
+          <label for="teacherGroup">Группа</label>
+          <select id="teacherGroup">${groupOptions(currentCourse, 'Группу выберет ученик')}</select>
           <button class="primary" type="button" id="teacherCopy">Сылтаманы күчерергә</button>
           <p class="teacher-status" id="teacherStatus" aria-live="polite"></p>
           <a class="teacher-link" href="teacher.html">Укытучы журналын ачарга</a>
@@ -472,7 +517,8 @@
       teacherLesson.addEventListener('change', updateTeacherMeta);
       updateTeacherMeta();
       document.getElementById('teacherCopy').addEventListener('click', async () => {
-        const group = document.getElementById('teacherGroup').value.trim();
+        const chosenGroup = document.getElementById('teacherGroup').value;
+        const group = allowedGroups(currentCourse).has(chosenGroup) ? chosenGroup : '';
         const url = new URL(location.href);
         url.search = '';
         url.searchParams.set('course', currentCourse);
@@ -517,22 +563,30 @@
       </section>`;
     }
 
+    function studyParagraphMarkup(paragraph) {
+      const quote = paragraph.match(/^(Коръән аяте|Коръән сүзе(?: \(мәгънәсе\))?|Хәдис|Пәйгамбәр сүзе(?: \(мәгънәсе\))?):\s*/);
+      if (!quote) return `<p>${escapeHtml(paragraph)}</p>`;
+      const kind = quote[1].startsWith('Коръән') ? 'quran-quote' : 'hadith-quote';
+      return `<p class="${kind}"><strong>${escapeHtml(quote[1])}:</strong> ${escapeHtml(paragraph.slice(quote[0].length))}</p>`;
+    }
+
     function lessonMarkup(item) {
       return `<section class="screen active" data-screen="intro">
-          <div class="eyebrow">Дәрес белән танышу</div>
+          <div class="eyebrow">${item.study ? 'Дәрес тексты' : 'Дәрес белән танышу'}</div>
           <h1>${item.title}</h1>
-          <p class="lead">${item.intro}</p>
-          <blockquote class="verse">${item.verse}</blockquote>
-          <div class="actions"><button class="primary" type="button" data-next>Башларга</button></div>
+          ${item.study ? `<div class="study-text">${item.study.map(studyParagraphMarkup).join('')}</div>` : `<p class="lead">${item.intro}</p>`}
+          ${!item.study || item.includeVerse ? `<blockquote class="verse">${escapeHtml(item.verse)}</blockquote>` : ''}
+          ${item.review?.length ? `<div class="review-list"><h2>Үзеңне тикшер</h2><p class="lead">${item.review.some(entry => entry.a) ? 'Җавапны ачар алдыннан үзең уйлап кара.' : 'Сорауларга җавапны үзең уйлап кара һәм дәрес текстыннан тикшер.'}</p>${item.review.map((entry, index) => entry.a ? `<details><summary>${index + 1}. ${escapeHtml(entry.q)}</summary><p>${escapeHtml(entry.a)}</p></details>` : `<div class="review-prompt">${index + 1}. ${escapeHtml(entry.q)}</div>`).join('')}</div>` : ''}
+          <div class="actions"><button class="primary" type="button" data-next>${item.study ? 'Тестка күчәргә' : 'Башларга'}</button></div>
         </section>
         <section class="screen" data-screen="registration">
           <div class="eyebrow">Укучы турында мәгълүмат</div>
           <h2>Тестны кем үтә?</h2>
-          <p class="lead">Нәтиҗә кемгә караганын белү өчен исем-фамилияңне һәм төркемеңне яз.</p>
+          <p class="lead">Для записи результата в журнал укажите имя и выберите группу.</p>
           <form class="student-form" id="studentForm">
             <div class="field"><label for="studentName">Исем һәм фамилия</label><input id="studentName" name="studentName" maxlength="80" autocomplete="name" required></div>
-            ${assignedGroup ? `<div class="field"><label>Төркем</label><div class="result-item"><b>${assignedGroup}</b></div></div>` : `<div class="field"><label for="studentGroup">Төркем</label><input id="studentGroup" name="studentGroup" maxlength="60" required></div>`}
-            <p class="form-note">Ике юлны да тутыргач кына тест башлана.</p>
+            ${assignedGroup ? `<div class="field"><label>Группа</label><div class="result-item"><b>${assignedGroup}</b></div></div>` : `<div class="field"><label for="studentGroup">Группа</label><select id="studentGroup" name="studentGroup" required>${groupOptions(currentCourse, 'Выберите группу')}</select></div>`}
+            <p class="form-note">После указания имени и группы можно начать тест.</p>
             <div class="actions"><button class="primary" type="submit">Тестны башларга</button></div>
           </form>
         </section>
@@ -571,7 +625,8 @@
       currentCourse = COURSES[courseNumber] ? courseNumber : 1;
       const courseLessons = COURSES[currentCourse];
       lesson = courseLessons.find(item => item.n === number) || courseLessons[0];
-      assignedGroup = new URLSearchParams(location.search).get('group') || '';
+      const requestedGroup = new URLSearchParams(location.search).get('group');
+      assignedGroup = allowedGroups(currentCourse).has(requestedGroup) ? requestedGroup : '';
       app.innerHTML = lessonMarkup(lesson);
       progressWrap.hidden = false;
       homeButton.hidden = true;
@@ -657,8 +712,8 @@
         event.preventDefault();
         const name = document.getElementById('studentName').value.trim();
         const groupInput = document.getElementById('studentGroup');
-        const group = assignedGroup || (groupInput ? groupInput.value.trim() : '');
-        if (!name || !group) return;
+        const group = assignedGroup || (groupInput ? groupInput.value : '');
+        if (!name || !allowedGroups(currentCourse).has(group)) return;
         student = {name, group};
         startedAt = Date.now();
         attemptId = self.crypto && self.crypto.randomUUID
