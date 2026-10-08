@@ -157,6 +157,12 @@
     .study-text .quran-quote { border-color: #79ad87; background: #eef7ef; }
     .study-text .hadith-quote { border-color: #d6b262; background: #fff8e9; }
     .study-text .quran-quote strong, .study-text .hadith-quote strong { font-weight: 800; }
+    .study-text .study-block { margin: 16px 0; padding: 18px 22px; border: 1px solid; border-left-width: 4px; border-radius: 16px; }
+    .study-text .study-block-1 { background: #f1f6f8; border-color: #dce9ee; border-left-color: #83afbd; }
+    .study-text .study-block-2 { background: #f8f4fa; border-color: #e9deed; border-left-color: #aa91bb; }
+    .study-text .study-block-3 { background: #fff5f6; border-color: #f1dfe2; border-left-color: #c7949f; }
+    .study-text .study-block p:last-child { margin-bottom: 0; }
+    @media (max-width: 520px) { .study-text .study-block { padding: 15px 17px; } }
     .review-list { max-width: 870px; margin-top: 34px; }
     .review-list h2 { margin-bottom: 18px; font-size: clamp(1.45rem, 3vw, 2rem); }
     .review-list details { margin-bottom: 10px; padding: 16px 20px; border: 1px solid #cfe1db; border-radius: 14px; background: white; }
@@ -563,18 +569,41 @@
       </section>`;
     }
 
+    const studyQuotePattern = /^(Коръән аяте|Коръән сүзе(?: \(мәгънәсе\))?|Хәдис|Пәйгамбәр сүзе(?: \(мәгънәсе\))?):\s*/;
     function studyParagraphMarkup(paragraph) {
-      const quote = paragraph.match(/^(Коръән аяте|Коръән сүзе(?: \(мәгънәсе\))?|Хәдис|Пәйгамбәр сүзе(?: \(мәгънәсе\))?):\s*/);
+      const quote = paragraph.match(studyQuotePattern);
       if (!quote) return `<p>${escapeHtml(paragraph)}</p>`;
       const kind = quote[1].startsWith('Коръән') ? 'quran-quote' : 'hadith-quote';
       return `<p class="${kind}"><strong>${escapeHtml(quote[1])}:</strong> ${escapeHtml(paragraph.slice(quote[0].length))}</p>`;
+    }
+    function studyTextMarkup(paragraphs) {
+      let markup = '';
+      let prose = [];
+      let blockIndex = 0;
+      function flushProse() {
+        if (!prose.length) return;
+        markup += `<div class="study-block study-block-${blockIndex % 3 + 1}">${prose.map(studyParagraphMarkup).join('')}</div>`;
+        blockIndex += 1;
+        prose = [];
+      }
+      paragraphs.forEach(paragraph => {
+        if (studyQuotePattern.test(paragraph)) {
+          flushProse();
+          markup += studyParagraphMarkup(paragraph);
+        } else {
+          prose.push(paragraph);
+          if (prose.length === 2) flushProse();
+        }
+      });
+      flushProse();
+      return markup;
     }
 
     function lessonMarkup(item) {
       return `<section class="screen active" data-screen="intro">
           <div class="eyebrow">${item.study ? 'Дәрес тексты' : 'Дәрес белән танышу'}</div>
           <h1>${item.title}</h1>
-          ${item.study ? `<div class="study-text">${item.study.map(studyParagraphMarkup).join('')}</div>` : `<p class="lead">${item.intro}</p>`}
+          ${item.study ? `<div class="study-text">${studyTextMarkup(item.study)}</div>` : `<p class="lead">${item.intro}</p>`}
           ${!item.study || item.includeVerse ? `<blockquote class="verse">${escapeHtml(item.verse)}</blockquote>` : ''}
           ${item.review?.length ? `<div class="review-list"><h2>Үзеңне тикшер</h2><p class="lead">${item.review.some(entry => entry.a) ? 'Җавапны ачар алдыннан үзең уйлап кара.' : 'Сорауларга җавапны үзең уйлап кара һәм дәрес текстыннан тикшер.'}</p>${item.review.map((entry, index) => entry.a ? `<details><summary>${index + 1}. ${escapeHtml(entry.q)}</summary><p>${escapeHtml(entry.a)}</p></details>` : `<div class="review-prompt">${index + 1}. ${escapeHtml(entry.q)}</div>`).join('')}</div>` : ''}
           <div class="actions"><button class="primary" type="button" data-next>${item.study ? 'Тестка күчәргә' : 'Башларга'}</button></div>
