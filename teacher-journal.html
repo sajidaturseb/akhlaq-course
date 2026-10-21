@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="tt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Укытучы журналы — очные группы</title>
+  <style>
+    :root { color-scheme: light; --ink:#193a36; --green:#116c62; --mint:#e7f4ee; --line:#b8d9cf; --gold:#b89457; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#f5f8f5; color:var(--ink); font-family:Arial,"Noto Sans",sans-serif; font-size:20px; line-height:1.5; }
+    header { background:linear-gradient(120deg,#145c55,#248579); color:white; padding:28px max(20px,calc((100vw - 1000px)/2)); border-bottom:6px solid var(--gold); }
+    h1 { font-family:Georgia,serif; font-size:clamp(32px,5vw,52px); line-height:1.1; margin:0 0 8px; }
+    h2 { font-family:Georgia,serif; font-size:clamp(26px,4vw,36px); margin:0 0 18px; }
+    main { max-width:1000px; margin:auto; padding:28px 20px 70px; }
+    .card { background:white; border:1px solid var(--line); border-radius:22px; padding:clamp(20px,4vw,40px); margin:0 0 24px; box-shadow:0 8px 24px #104f4910; }
+    label { display:block; font-weight:700; margin:14px 0 8px; }
+    input,select,button { font:inherit; min-height:58px; border-radius:12px; }
+    input,select { width:100%; border:2px solid var(--line); padding:12px 16px; color:var(--ink); background:white; }
+    input:focus,select:focus,button:focus-visible { outline:4px solid #94d4c4; outline-offset:2px; }
+    button { border:0; padding:12px 24px; background:var(--green); color:white; font-weight:700; cursor:pointer; }
+    button:hover { background:#0a4d45; }
+    button.secondary { background:white; color:var(--green); border:2px solid var(--green); }
+    .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:22px; }
+    .hint { color:#45645c; margin:8px 0 0; }
+    .notice { background:#fff5df; border-left:5px solid var(--gold); padding:12px 16px; border-radius:8px; margin-top:18px; }
+    .error { color:#a12e28; font-weight:700; min-height:30px; margin:10px 0 0; }
+    .results { display:grid; gap:16px; }
+    article { background:white; border:1px solid var(--line); border-radius:18px; padding:22px; }
+    article h3 { font-size:24px; margin:0 0 12px; }
+    article p { margin:6px 0; overflow-wrap:anywhere; }
+    details { margin-top:16px; border-top:1px solid var(--line); padding-top:12px; }
+    summary { cursor:pointer; font-weight:700; color:var(--green); }
+    .answer { background:var(--mint); border-radius:10px; padding:12px; white-space:pre-wrap; margin-top:10px; overflow-wrap:anywhere; }
+    .muted { color:#4e685f; }
+    [hidden] { display:none !important; }
+    @media print { header,.controls,.actions,.notice { display:none !important; } body { background:white; } article { break-inside:avoid; box-shadow:none; } }
+  </style>
+</head>
+<body>
+  <header><h1>Укытучы журналы</h1><div>Очные группы · шәхси керү коды</div></header>
+  <main>
+    <section id="loginPanel" class="card">
+      <h2>Журналга керү</h2>
+      <p class="hint">Үзегезгә бирелгән шәхси кодны языгыз. / Введите свой личный код.</p>
+      <form id="loginForm">
+        <label for="code">Керү коды / Код доступа</label>
+        <input id="code" type="password" autocomplete="off" spellcheck="false" required placeholder="XXXX-XXXX-XXXX">
+        <div class="actions"><button type="submit">Керергә / Войти</button></div>
+      </form>
+      <p id="loginError" class="error" role="alert"></p>
+      <div class="notice">Кодны укучыларга һәм гомуми төркемгә җибәрмәгез. / Не отправляйте код ученикам и в общую группу.</div>
+    </section>
+
+    <section id="journalPanel" hidden>
+      <div class="card controls">
+        <h2 id="teacherName">Журнал</h2>
+        <label for="group">Төркем / Группа</label>
+        <select id="group"></select>
+        <label for="subject">Фән / Предмет</label>
+        <select id="subject"></select>
+        <div class="actions">
+          <button id="load" type="button">Нәтиҗәләрне күрсәтергә / Показать</button>
+          <button id="logout" class="secondary" type="button">Чыгарга / Выйти</button>
+        </div>
+        <p id="journalError" class="error" role="alert"></p>
+      </div>
+      <div class="card"><h2>Нәтиҗәләр / Результаты</h2><p id="status" class="muted">Төркемне һәм фәнне сайлагыз.</p><div id="results" class="results"></div><div class="actions"><button id="more" type="button" hidden>Тагын күрсәтергә / Ещё записи</button></div></div>
+    </section>
+  </main>
+  <script>
+    const endpoint = 'https://kxwhwmxzmtvueksyayvz.supabase.co/functions/v1/teacher-journal-access';
+    const names = {fiqh:'Фикһ',aqida:'Гакыйдә',akhlaq:'Әхлак',sira:'Сира',tafsir:'Тәфсир',tajwid1:'Тәҗвид 1',tajwid2:'Тәҗвид 2',prophets:'Пәйгамбәрләр тарихы',pedagogy:'Педагогика',dagvat:'Дәгъват',vagaz:'Вәгазь дәресләре'};
+    let code = '';
+    let grants = [];
+    let nextOffset = null;
+    const $ = (id) => document.getElementById(id);
+    async function request(payload) {
+      const response = await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,code})});
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Не удалось открыть журнал');
+      return data;
+    }
+    function option(select,value,label) {
+      const element=document.createElement('option'); element.value=value; element.textContent=label; select.append(element);
+    }
+    function updateSubjects() {
+      const group=$('group').value;
+      const subjects=[...new Set(grants.filter(g=>g.group===group).map(g=>g.subject))];
+      $('subject').replaceChildren();
+      for(const subject of subjects) option($('subject'),subject,names[subject]||subject);
+      $('results').replaceChildren(); $('status').textContent='Нәтиҗәләрне күрсәтү өчен төймәгә басыгыз.'; $('more').hidden=true;
+    }
+    $('loginForm').addEventListener('submit',async(event)=>{
+      event.preventDefault(); $('loginError').textContent='';
+      code=$('code').value.trim();
+      try {
+        const data=await request({action:'login'});
+        grants=data.grants;
+        $('teacherName').textContent=data.teacher;
+        $('group').replaceChildren();
+        for(const group of [...new Set(grants.map(g=>g.group))]) option($('group'),group,group);
+        updateSubjects(); $('loginPanel').hidden=true; $('journalPanel').hidden=false; $('code').value='';
+      } catch(error) { code=''; $('loginError').textContent=error.message; }
+    });
+    $('group').addEventListener('change',updateSubjects);
+    $('logout').addEventListener('click',()=>{ code='';grants=[];$('results').replaceChildren();$('journalPanel').hidden=true;$('loginPanel').hidden=false; });
+    const line=(container,label,value)=>{ if(value===null||value===undefined||value==='')return; const p=document.createElement('p'); const b=document.createElement('strong');b.textContent=label+': ';p.append(b,document.createTextNode(String(value)));container.append(p); };
+    function addRow(row) {
+      const card=document.createElement('article');
+      const h=document.createElement('h3');h.textContent=row.student_name||'Имя не указано';card.append(h);
+      const date=row.submitted_at?new Date(row.submitted_at).toLocaleString('ru-RU'):'';
+      line(card,'Дата',date);line(card,'Урок',row.lesson_title||row.surah_title||row.lesson_id);
+      if(row.total!==null&&row.total!==undefined)line(card,'Результат',`${row.score ?? '—'} / ${row.total}${row.percent===null||row.percent===undefined?'':` (${row.percent}%)`}`);
+      const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Посмотреть ответы';details.append(summary);
+      if(row.open_question)line(details,'Открытый вопрос',row.open_question);
+      if(row.open_answer)line(details,'Ответ',row.open_answer);
+      if(row.answer)line(details,'Задание',row.answer);
+      if(row.answers){const pre=document.createElement('div');pre.className='answer';pre.textContent=typeof row.answers==='string'?row.answers:JSON.stringify(row.answers,null,2);details.append(pre);}
+      if(details.childNodes.length>1)card.append(details);
+      $('results').append(card);
+    }
+    async function load(reset=true) {
+      $('journalError').textContent='';$('status').textContent='Загрузка…';
+      if(reset){$('results').replaceChildren();nextOffset=0;}
+      try {
+        const data=await request({action:'list',group:$('group').value,subject:$('subject').value,offset:nextOffset});
+        for(const row of data.rows)addRow(row);
+        nextOffset=data.nextOffset;$('more').hidden=nextOffset===null;
+        $('status').textContent=$('results').childElementCount?`Записей показано: ${$('results').childElementCount}`:'В этой группе пока нет записей по выбранному предмету.';
+      } catch(error) {$('status').textContent='';$('journalError').textContent=error.message;}
+    }
+    $('load').addEventListener('click',()=>load(true));$('more').addEventListener('click',()=>load(false));
+  </script>
+</body>
+</html>
