@@ -98,6 +98,10 @@
       font: 700 .87rem/1 Arial, sans-serif;
       white-space: nowrap;
     }
+    .language-switch { display: inline-flex; gap: 5px; margin-right: 10px; vertical-align: middle; }
+    .language-switch[hidden] { display: none; }
+    .language-switch button { padding: 8px 10px; border: 1px solid rgba(255,230,167,.6); border-radius: 9px; color: #fff; background: transparent; font: 700 .85rem/1 Arial, sans-serif; cursor: pointer; }
+    .language-switch button[aria-pressed="true"] { color: var(--deep-2); background: #ffe6a7; }
 
     .progress-wrap {
       margin: 0 22px;
@@ -392,6 +396,10 @@
         </div>
       </div>
       <div>
+        <div class="language-switch" id="languageSwitch" aria-label="Тел / Язык">
+          <button type="button" data-lang="tt" aria-pressed="true">Татарча</button>
+          <button type="button" data-lang="ru" aria-pressed="false">Русский</button>
+        </div>
         <button class="home-button" id="homeButton" hidden>Барлык дәресләр</button>
         <span class="lesson-chip" id="lessonChip">1 нче курс</span>
       </div>
@@ -407,12 +415,13 @@
     <div class="footer-note">Укучының шәхесенә яки әхлагына билге куелмый. Белемне аңлау һәм хәлдә дөрес гамәлне тану гына тикшерелә.</div>
   </main>
 
-  <script src="lessons.js?v=study-groups-20261005"></script>
+  <script src="lessons.js?v=akhlaq-ru-20261021"></script>
   <script src="course-2.js"></script>
   <script src="course-3.js"></script>
   <script src="course-4.js"></script>
-  <script src="study-texts.js?v=study-groups-20261005"></script>
-  <script src="review-curated.js?v=study-groups-20261005"></script>
+  <script src="study-texts.js?v=akhlaq-ru-20261021"></script>
+  <script src="review-curated.js?v=akhlaq-ru-20261021"></script>
+  <script src="course-1-ru.js?v=akhlaq-ru-20261021"></script>
   <script src="config.js"></script>
   <script>
     const app = document.getElementById('app');
@@ -423,15 +432,83 @@
     const lessonChip = document.getElementById('lessonChip');
     const brandMeta = document.getElementById('brandMeta');
     const homeButton = document.getElementById('homeButton');
+    const languageSwitch = document.getElementById('languageSwitch');
     const COURSES = {1: AKHLAQ_LESSONS, 2: AKHLAQ_COURSE_2_DRAFT, 3: AKHLAQ_COURSE_3_DRAFT, 4: AKHLAQ_COURSE_4_DRAFT};
     const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[char]));
     for (const [courseNumber, courseLessons] of Object.entries(COURSES)) {
       for (const item of courseLessons) {
         const source = window.AKHLAQ_STUDY[courseNumber]?.[item.n];
         if (!source) continue;
-        if (!item.study) item.study = source.study;
+        if (!item.study || courseNumber === '1') item.study = source.study;
         item.review = window.AKHLAQ_REVIEW_CURATED[courseNumber]?.[item.n] || item.review || source.review;
       }
+    }
+    let currentLang = new URLSearchParams(location.search).get('lang') === 'ru' ? 'ru' : 'tt';
+    function ruActive() { return currentLang === 'ru' && currentCourse === 1; }
+    function displayLessons(courseNumber) {
+      if (Number(courseNumber) !== 1 || currentLang !== 'ru') return COURSES[courseNumber];
+      return COURSES[1].map(item => ({...item, ...window.AKHLAQ_COURSE_1_RU[item.n], n: item.n}));
+    }
+    const ruUi = new Map([
+      ['Әхлак дәресләре', 'Уроки ахляка'],
+      ['Укытучы өчен', 'Для преподавателя'],
+      ['Дәрес сылтамасы', 'Ссылка на урок'],
+      ['Дәрес', 'Урок'],
+      ['Сылтаманы күчерергә', 'Скопировать ссылку'],
+      ['Укытучы журналын ачарга', 'Открыть журнал преподавателя'],
+      ['Дәрес тексты', 'Текст урока'],
+      ['Дәрес белән танышу', 'Знакомство с уроком'],
+      ['Үзеңне тикшер', 'Проверьте себя'],
+      ['Җавапны ачар алдыннан үзең уйлап кара.', 'Прежде чем открыть ответ, подумайте сами.'],
+      ['Сорауларга җавапны үзең уйлап кара һәм дәрес текстыннан тикшер.', 'Подумайте над вопросами и проверьте ответы по тексту урока.'],
+      ['Тестка күчәргә', 'Перейти к тесту'],
+      ['Башларга', 'Начать'],
+      ['Укучы турында мәгълүмат', 'Сведения об ученике'],
+      ['Тестны кем үтә?', 'Кто проходит тест?'],
+      ['Исем һәм фамилия', 'Имя и фамилия'],
+      ['Тестны башларга', 'Начать тест'],
+      ['Гамәли бирем', 'Практическое задание'],
+      ['Дәрестән соң башкарырга', 'Выполнить после урока'],
+      ['Бу атнадагы бирем', 'Задание на эту неделю'],
+      ['Биремне аңладым һәм башкарырга ниятләдем.', 'Я поняла задание и намерена его выполнить.'],
+      ['Алга', 'Далее'],
+      ['Белем', 'Знание'],
+      ['Дөрес гамәлне сайла', 'Выберите верный поступок'],
+      ['Бу җавапка билге куелмый. Ул дәрестәге фикерне үз тормышың белән бәйләргә ярдәм итә.', 'Этот ответ не оценивается. Он помогает связать урок со своей жизнью.'],
+      ['Нәтиҗәне күрсәтергә', 'Показать результат'],
+      ['Дәрес тәмам', 'Урок завершён'],
+      ['Мәә шәә Аллах, син дәресне үттең!', 'Машааллах, вы завершили урок!'],
+      ['Җавапларың буенча нәтиҗә әзер.', 'Результат по вашим ответам готов.'],
+      ['нәтиҗә балл белән генә бетми. Хәзер дәрестәге биремне тормышта башкару мөһим.', 'результат не сводится к баллам. Важно применить задание урока в жизни.'],
+      ['Дөрес җавап', 'Правильных ответов'],
+      ['Хәлне аңлау', 'Понимание ситуации'],
+      ['Гамәли адым:', 'Практический шаг:'],
+      ['Нәтиҗә укытучыга җибәрелә…', 'Результат отправляется преподавателю…'],
+      ['Кабат үтәргә', 'Пройти ещё раз'],
+      ['Минем фикерем', 'Мои мысли'],
+      ['Группа', 'Группа']
+    ]);
+    function translateUiTree(root) {
+      if (!ruActive()) return;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        const original = node.nodeValue;
+        const trimmed = original.trim();
+        let translated = ruUi.get(trimmed);
+        if (!translated) translated = trimmed.replace(/^(\d+) нче сорау$/, 'вопрос $1').replace(/^(\d+) нче дәрес — /, 'Урок $1 — ').replace(/^(\d+) нче курс$/, 'Курс $1');
+        if (translated !== trimmed) node.nodeValue = original.replace(trimmed, translated);
+      }
+    }
+    function updateLanguageChrome() {
+      languageSwitch.hidden = currentCourse !== 1;
+      languageSwitch.querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.lang === currentLang)));
+      document.documentElement.lang = ruActive() ? 'ru' : 'tt';
+      document.querySelector('.brand-name').textContent = ruActive() ? 'Курс ахляка' : 'Әхлак курсы';
+      document.querySelector('.footer-note').textContent = ruActive()
+        ? 'Мы не оцениваем личность или нрав ученика. Проверяем лишь понимание материала и выбор верного поступка.'
+        : 'Укучының шәхесенә яки әхлагына билге куелмый. Белемне аңлау һәм хәлдә дөрес гамәлне тану гына тикшерелә.';
+      homeButton.textContent = ruActive() ? 'Все уроки' : 'Барлык дәресләр';
     }
     function groupValues(courseNumber) {
       return [
@@ -477,22 +554,26 @@
 
     function showHome(courseNumber = 1) {
       currentCourse = COURSES[courseNumber] ? courseNumber : 1;
-      const courseLessons = COURSES[currentCourse];
-      history.replaceState({}, '', currentCourse === 1 ? location.pathname : `?course=${currentCourse}`);
+      const courseLessons = displayLessons(currentCourse);
+      const homeUrl = new URL(location.href);
+      homeUrl.search = '';
+      if (currentCourse !== 1) homeUrl.searchParams.set('course', currentCourse);
+      if (ruActive()) homeUrl.searchParams.set('lang', 'ru');
+      history.replaceState({}, '', homeUrl.pathname + homeUrl.search);
       lesson = null;
       progressWrap.hidden = true;
       homeButton.hidden = true;
       lessonChip.hidden = false;
-      lessonChip.textContent = `${currentCourse} нче курс`;
-      brandMeta.textContent = `${currentCourse} НЧЕ КУРС · ${courseLessons.length} ДӘРЕС`;
-      document.title = `Әхлак курсы — ${currentCourse} нче курс`;
+      lessonChip.textContent = ruActive() ? `Курс ${currentCourse}` : `${currentCourse} нче курс`;
+      brandMeta.textContent = ruActive() ? `КУРС ${currentCourse} · ${courseLessons.length} УРОКА` : `${currentCourse} НЧЕ КУРС · ${courseLessons.length} ДӘРЕС`;
+      document.title = ruActive() ? `Курс ахляка — курс ${currentCourse}` : `Әхлак курсы — ${currentCourse} нче курс`;
       app.innerHTML = `<div class="home-layout">
         <section class="course-home">
           <div class="eyebrow">${currentCourse} нче курс</div>
           <h1>Әхлак дәресләре</h1>
-          <p class="lead">${courseLessons.length} дәреснең һәрберсендә уку өчен текст, кабатлау сораулары, белемне һәм тормыштагы хәлне аңлауны тикшерү бар.</p>
+          <p class="lead">${ruActive() ? `В каждом из ${courseLessons.length} уроков есть текст, вопросы для повторения и задания для проверки понимания.` : `${courseLessons.length} дәреснең һәрберсендә уку өчен текст, кабатлау сораулары, белемне һәм тормыштагы хәлне аңлауны тикшерү бар.`}</p>
           <div class="lesson-grid">
-            ${courseLessons.map(item => `<a class="lesson-link" href="?course=${currentCourse}&lesson=${item.n}"><span class="lesson-number">${item.n}</span><span class="lesson-title">${item.title}</span></a>`).join('')}
+            ${courseLessons.map(item => `<a class="lesson-link" href="?course=${currentCourse}&lesson=${item.n}${ruActive() ? '&lang=ru' : ''}"><span class="lesson-number">${item.n}</span><span class="lesson-title">${escapeHtml(item.title)}</span></a>`).join('')}
           </div>
         </section>
         <aside class="teacher-card">
@@ -500,7 +581,7 @@
           <h2>Дәрес сылтамасы</h2>
           <p class="lead">Выберите урок и группу, затем отправьте готовую ссылку ученику.</p>
           <label for="teacherLesson">Дәрес</label>
-          <select id="teacherLesson">${courseLessons.map(item => `<option value="${item.n}">${item.n} нче дәрес — ${item.title}</option>`).join('')}</select>
+          <select id="teacherLesson">${courseLessons.map(item => `<option value="${item.n}">${ruActive() ? `Урок ${item.n}` : `${item.n} нче дәрес`} — ${escapeHtml(item.title)}</option>`).join('')}</select>
           <p class="teacher-meta" id="teacherMeta"></p>
           <label for="teacherGroup">Группа</label>
           <select id="teacherGroup">${groupOptions(currentCourse, 'Группу выберет ученик')}</select>
@@ -511,14 +592,16 @@
       app.querySelectorAll('.lesson-link').forEach(link => link.addEventListener('click', event => {
         event.preventDefault();
         const number = Number(new URL(link.href).searchParams.get('lesson'));
-        history.pushState({}, '', `?course=${currentCourse}&lesson=${number}`);
+        history.pushState({}, '', `?course=${currentCourse}&lesson=${number}${ruActive() ? '&lang=ru' : ''}`);
         openLesson(number, currentCourse);
       }));
+      updateLanguageChrome();
+      translateUiTree(app);
       const teacherLesson = document.getElementById('teacherLesson');
       const teacherMeta = document.getElementById('teacherMeta');
       const updateTeacherMeta = () => {
         const selected = courseLessons.find(item => item.n === Number(teacherLesson.value));
-        teacherMeta.textContent = selected ? `${selected.questions.length} сорау · ${selected.title}` : '';
+        teacherMeta.textContent = selected ? `${selected.questions.length} ${ruActive() ? 'вопроса' : 'сорау'} · ${selected.title}` : '';
       };
       teacherLesson.addEventListener('change', updateTeacherMeta);
       updateTeacherMeta();
@@ -529,9 +612,10 @@
         url.search = '';
         url.searchParams.set('course', currentCourse);
         url.searchParams.set('lesson', teacherLesson.value);
+        if (ruActive()) url.searchParams.set('lang', 'ru');
         if (group) url.searchParams.set('group', group);
         await copyText(url.toString());
-        document.getElementById('teacherStatus').textContent = 'Сылтама күчерелде.';
+        document.getElementById('teacherStatus').textContent = ruActive() ? 'Ссылка скопирована.' : 'Сылтама күчерелде.';
       });
       window.scrollTo({top: 0, behavior: 'smooth'});
     }
@@ -554,26 +638,26 @@
 
     function questionMarkup(item, index) {
       const kind = item.t === 'k' ? 'knowledge' : 'situation';
-      const kindLabel = item.t === 'k' ? 'Белем' : 'Дөрес гамәлне сайла';
+      const kindLabel = item.t === 'k' ? (ruActive() ? 'Знание' : 'Белем') : (ruActive() ? 'Выберите верный поступок' : 'Дөрес гамәлне сайла');
       const number = index < 2 ? index + 1 : index - 1;
       const options = item.o
         .map((text, originalIndex) => ({text, correct: originalIndex === item.a}))
         .sort(() => Math.random() - .5);
       const correct = options.findIndex(option => option.correct);
-      return `<section class="screen question" data-screen="${kind}" data-number="${index + 1}" data-correct="${correct}" data-explanation="${item.e}">
-        <div class="eyebrow">${kindLabel} · ${number} нче сорау</div>
-        <h2>${item.q}</h2>
-        <div class="options">${options.map((option, i) => `<button class="option" data-value="${i}"><span class="letter">${letters[i]}</span><span>${option.text}</span></button>`).join('')}</div>
+      return `<section class="screen question" data-screen="${kind}" data-number="${index + 1}" data-correct="${correct}" data-explanation="${escapeHtml(item.e)}">
+        <div class="eyebrow">${kindLabel} · ${ruActive() ? `вопрос ${number}` : `${number} нче сорау`}</div>
+        <h2>${escapeHtml(item.q)}</h2>
+        <div class="options">${options.map((option, i) => `<button class="option" data-value="${i}"><span class="letter">${ruActive() ? ['А','Б','В'][i] : letters[i]}</span><span>${escapeHtml(option.text)}</span></button>`).join('')}</div>
         <div class="feedback" role="status"></div>
-        <div class="actions"><button class="primary" data-next disabled>Алга</button></div>
+        <div class="actions"><button class="primary" data-next disabled>${ruActive() ? 'Далее' : 'Алга'}</button></div>
       </section>`;
     }
 
-    const studyQuotePattern = /^(Коръән аяте|Коръән сүзе(?: \(мәгънәсе\))?|Хәдис|Пәйгамбәр сүзе(?: \(мәгънәсе\))?):\s*/;
+    const studyQuotePattern = /^(Коръән аяте(?: \([^)]*\))?|Коръән сүзе(?: \(мәгънәсе\))?|Хәдис|Пәйгамбәр сүзе(?: \(мәгънәсе\))?|Аят Корана(?: \([^)]*\))?|Хадис):\s*/;
     function studyParagraphMarkup(paragraph) {
       const quote = paragraph.match(studyQuotePattern);
       if (!quote) return `<p>${escapeHtml(paragraph)}</p>`;
-      const kind = quote[1].startsWith('Коръән') ? 'quran-quote' : 'hadith-quote';
+      const kind = quote[1].startsWith('Коръән') || quote[1].startsWith('Аят Корана') ? 'quran-quote' : 'hadith-quote';
       return `<p class="${kind}"><strong>${escapeHtml(quote[1])}:</strong> ${escapeHtml(paragraph.slice(quote[0].length))}</p>`;
     }
     function studyTextMarkup(paragraphs) {
@@ -652,17 +736,24 @@
 
     function openLesson(number, courseNumber = 1) {
       currentCourse = COURSES[courseNumber] ? courseNumber : 1;
-      const courseLessons = COURSES[currentCourse];
+      const courseLessons = displayLessons(currentCourse);
       lesson = courseLessons.find(item => item.n === number) || courseLessons[0];
       const requestedGroup = new URLSearchParams(location.search).get('group');
       assignedGroup = allowedGroups(currentCourse).has(requestedGroup) ? requestedGroup : '';
       app.innerHTML = lessonMarkup(lesson);
+      updateLanguageChrome();
+      translateUiTree(app);
+      if (ruActive()) {
+        const reflectionInput = app.querySelector('#reflection');
+        reflectionInput.setAttribute('aria-label', 'Мои мысли');
+        reflectionInput.placeholder = 'Сегодня я поняла... (можно оставить запись)';
+      }
       progressWrap.hidden = false;
       homeButton.hidden = true;
       lessonChip.hidden = false;
-      lessonChip.textContent = `${currentCourse} нче курс · ${lesson.n} нче дәрес`;
-      brandMeta.textContent = `${currentCourse} НЧЕ КУРС · ${courseLessons.length} ДӘРЕС`;
-      document.title = `${currentCourse} нче курс · ${lesson.n} нче дәрес — Әхлак`;
+      lessonChip.textContent = ruActive() ? `Курс ${currentCourse} · урок ${lesson.n}` : `${currentCourse} нче курс · ${lesson.n} нче дәрес`;
+      brandMeta.textContent = ruActive() ? `КУРС ${currentCourse} · ${courseLessons.length} УРОКА` : `${currentCourse} НЧЕ КУРС · ${courseLessons.length} ДӘРЕС`;
+      document.title = ruActive() ? `Курс ${currentCourse} · урок ${lesson.n} — Ахляк` : `${currentCourse} нче курс · ${lesson.n} нче дәрес — Әхлак`;
       score = 0; knowledge = 0; situation = 0;
       student = {name: '', group: ''};
       startedAt = 0;
@@ -678,7 +769,7 @@
       current = index;
       screens.forEach((screen, i) => screen.classList.toggle('active', i === index));
       const type = screens[index].dataset.screen;
-      sectionName.textContent = labels[type];
+      sectionName.textContent = ruActive() ? ({intro:'Текст урока и повторение',registration:'Сведения об ученике',knowledge:'Проверка знаний',situation:'Выбор поступка',practice:'Практическое задание',reflection:'Размышление',result:'Результат урока'}[type]) : labels[type];
       stepText.textContent = `${index + 1} / ${screens.length}`;
       progressBar.style.width = `${((index + 1) / screens.length) * 100}%`;
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -694,9 +785,9 @@
       document.getElementById('knowledgeValue').textContent = `${knowledge} / 2`;
       document.getElementById('situationValue').textContent = `${situation} / 2`;
       const lead = document.getElementById('resultLead');
-      lead.textContent = score === 4
-        ? 'Барлык сорауларга да дөрес җавап бирдең. Белемеңне гамәл белән ныгытырга калды.'
-        : 'Нәтиҗәң яхшы башлангыч. Аңлатмаларны искә төшереп, дәресне тагын бер тапкыр үтәргә мөмкин.';
+      lead.textContent = ruActive()
+        ? (score === 4 ? 'Вы ответили верно на все вопросы. Теперь закрепите знание делом.' : 'Это хорошее начало. Можно ещё раз прочитать пояснения и пройти урок повторно.')
+        : (score === 4 ? 'Барлык сорауларга да дөрес җавап бирдең. Белемеңне гамәл белән ныгытырга калды.' : 'Нәтиҗәң яхшы башлангыч. Аңлатмаларны искә төшереп, дәресне тагын бер тапкыр үтәргә мөмкин.');
     }
 
     function bindLesson() {
@@ -731,7 +822,7 @@
               if (question.dataset.screen === 'situation') situation += 1;
             }
             feedback.className = `feedback show ${isCorrect ? 'good' : 'try'}`;
-            feedback.innerHTML = `<strong>${isCorrect ? 'Дөрес җавап!' : 'Бу юлы дөрес түгел.'}</strong>${explanation}`;
+            feedback.innerHTML = `<strong>${isCorrect ? (ruActive() ? 'Верно!' : 'Дөрес җавап!') : (ruActive() ? 'На этот раз неверно.' : 'Бу юлы дөрес түгел.')}</strong>${escapeHtml(explanation)}`;
             next.disabled = false;
           });
         });
@@ -764,7 +855,7 @@
       if (submitted) return;
       submitted = true;
       if (!resultsEndpoint) {
-        if (status) status.textContent = 'Нәтиҗәләрне җибәрү вакытлыча көйләнмәгән.';
+        if (status) status.textContent = ruActive() ? 'Отправка результатов временно не настроена.' : 'Нәтиҗәләрне җибәрү вакытлыча көйләнмәгән.';
         return;
       }
       const payload = {
@@ -772,7 +863,7 @@
         group: student.group,
         courseId: currentCourse,
         lessonId: lesson.n,
-        lessonTitle: lesson.title,
+        lessonTitle: COURSES[currentCourse].find(item => item.n === lesson.n).title,
         score,
         total: lesson.questions.length,
         durationSeconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)),
@@ -787,16 +878,28 @@
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok || !result.ok) throw new Error(result.error || 'request_failed');
-        if (status) status.textContent = 'Нәтиҗә укытучыга җибәрелде.';
+        if (status) status.textContent = ruActive() ? 'Результат отправлен преподавателю.' : 'Нәтиҗә укытучыга җибәрелде.';
       } catch (_) {
         submitted = false;
-        if (status) status.textContent = 'Нәтиҗәне җибәреп булмады. Интернетны тикшереп, кабатлап карагыз.';
+        if (status) status.textContent = ruActive() ? 'Не удалось отправить результат. Проверьте соединение и попробуйте ещё раз.' : 'Нәтиҗәне җибәреп булмады. Интернетны тикшереп, кабатлап карагыз.';
       }
     }
 
-    homeButton.addEventListener('click', showHome);
+    homeButton.addEventListener('click', () => showHome(currentCourse));
+    languageSwitch.querySelectorAll('button').forEach(button => button.addEventListener('click', () => {
+      if (currentCourse !== 1 || currentLang === button.dataset.lang) return;
+      currentLang = button.dataset.lang;
+      const url = new URL(location.href);
+      if (currentLang === 'ru') url.searchParams.set('lang', 'ru');
+      else url.searchParams.delete('lang');
+      history.replaceState({}, '', url.pathname + url.search);
+      const params = new URLSearchParams(location.search);
+      const number = Number(params.get('lesson'));
+      number ? openLesson(number, 1) : showHome(1);
+    }));
     window.addEventListener('popstate', () => {
       const params = new URLSearchParams(location.search);
+      currentLang = params.get('lang') === 'ru' ? 'ru' : 'tt';
       const number = Number(params.get('lesson'));
       const course = Number(params.get('course')) || 1;
       number ? openLesson(number, course) : showHome(course);
