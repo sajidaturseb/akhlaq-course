@@ -44,7 +44,7 @@
       <p class="hint">Үзегезгә бирелгән шәхси кодны языгыз. / Введите свой личный код.</p>
       <form id="loginForm">
         <label for="code">Керү коды / Код доступа</label>
-        <input id="code" type="password" autocomplete="off" spellcheck="false" required placeholder="XXXX-XXXX-XXXX">
+        <input id="code" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" spellcheck="false" required placeholder="6 цифр">
         <div class="actions"><button type="submit">Керергә / Войти</button></div>
       </form>
       <p id="loginError" class="error" role="alert"></p>
