@@ -35,7 +35,7 @@
   </style>
 </head>
 <body>
-  <header><h1>Укытучы журналы</h1><div>Очные группы · шәхси керү коды</div></header>
+  <header><h1>Укытучы журналы</h1><div id="journalScope">Очные группы · шәхси керү коды</div></header>
   <main>
     <section id="loginPanel" class="card">
       <h2>Журналга керү</h2>
@@ -68,6 +68,11 @@
     </section>
   </main>
   <script>
+    const onlineMode = new URLSearchParams(location.search).get('mode') === 'online';
+    if (onlineMode) {
+      document.title = 'Укытучы журналы — онлайн төркемнәр';
+      document.getElementById('journalScope').textContent = 'Онлайн төркемнәр · шәхси керү коды';
+    }
     const endpoint = 'https://kxwhwmxzmtvueksyayvz.supabase.co/functions/v1/teacher-journal-access';
     const names = {fiqh:'Фикһ',aqida:'Гакыйдә',akhlaq:'Әхлак',sira:'Сира',tafsir:'Тәфсир',tajwid1:'Тәҗвид 1',tajwid2:'Тәҗвид 2',prophets:'Пәйгамбәрләр тарихы',pedagogy:'Педагогика',dagvat:'Дәгъват',vagaz:'Вәгазь дәресләре'};
     let code = '';
@@ -135,8 +140,10 @@
       code=$('code').value.trim();
       try {
         const data=await request({action:'login'});
-        grants=data.grants;
-        $('teacherName').textContent=data.teacher;
+        const onlineGroup=group=>/^Онлайн 1 курс, (татар|рус) — \d+ группа$/.test(group);
+        grants=(Array.isArray(data.grants)?data.grants:[]).filter(g=>onlineMode?onlineGroup(g.group):!onlineGroup(g.group));
+        if(!grants.length)throw new Error(onlineMode?'Бу код онлайн төркемнәр өчен түгел.':'Этот код не для очных групп.');
+        $('teacherName').textContent=onlineMode?data.teacher.replace(/ \(онлайн\)$/,''):data.teacher;
         $('group').replaceChildren();
         for(const group of [...new Set(grants.map(g=>g.group))]) option($('group'),group,group);
         updateSubjects(); $('loginPanel').hidden=true; $('journalPanel').hidden=false; $('code').value='';

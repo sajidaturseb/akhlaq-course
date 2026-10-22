@@ -517,7 +517,12 @@
       ];
     }
     function allowedGroups(courseNumber) {
-      return new Set(groupValues(courseNumber).flatMap(({label, count}) =>
+      const sections = groupValues(courseNumber);
+      if (courseNumber === 1) sections.push(
+        {label: 'Онлайн 1 курс, татар', count: 24},
+        {label: 'Онлайн 1 курс, рус', count: 5}
+      );
+      return new Set(sections.flatMap(({label, count}) =>
         Array.from({length: count}, (_, index) => `${label} — ${index + 1} группа`)));
     }
     function groupOptions(courseNumber, placeholder) {
@@ -555,10 +560,14 @@
     function showHome(courseNumber = 1) {
       currentCourse = COURSES[courseNumber] ? courseNumber : 1;
       const courseLessons = displayLessons(currentCourse);
+      const requestedGroup = new URLSearchParams(location.search).get('group');
+      assignedGroup = allowedGroups(currentCourse).has(requestedGroup) ? requestedGroup : '';
+      const groupQuery = assignedGroup ? `&group=${encodeURIComponent(assignedGroup)}` : '';
       const homeUrl = new URL(location.href);
       homeUrl.search = '';
       if (currentCourse !== 1) homeUrl.searchParams.set('course', currentCourse);
       if (ruActive()) homeUrl.searchParams.set('lang', 'ru');
+      if (assignedGroup) homeUrl.searchParams.set('group', assignedGroup);
       history.replaceState({}, '', homeUrl.pathname + homeUrl.search);
       lesson = null;
       progressWrap.hidden = true;
@@ -573,10 +582,10 @@
           <h1>Әхлак дәресләре</h1>
           <p class="lead">${ruActive() ? `В каждом из ${courseLessons.length} уроков есть текст, вопросы для повторения и задания для проверки понимания.` : `${courseLessons.length} дәреснең һәрберсендә уку өчен текст, кабатлау сораулары, белемне һәм тормыштагы хәлне аңлауны тикшерү бар.`}</p>
           <div class="lesson-grid">
-            ${courseLessons.map(item => `<a class="lesson-link" href="?course=${currentCourse}&lesson=${item.n}${ruActive() ? '&lang=ru' : ''}"><span class="lesson-number">${item.n}</span><span class="lesson-title">${escapeHtml(item.title)}</span></a>`).join('')}
+            ${courseLessons.map(item => `<a class="lesson-link" href="?course=${currentCourse}&lesson=${item.n}${ruActive() ? '&lang=ru' : ''}${groupQuery}"><span class="lesson-number">${item.n}</span><span class="lesson-title">${escapeHtml(item.title)}</span></a>`).join('')}
           </div>
         </section>
-        <aside class="teacher-card">
+        <aside class="teacher-card" ${assignedGroup.startsWith('Онлайн 1 курс, ') ? 'hidden style="display:none"' : ''}>
           <div class="eyebrow">Укытучы өчен</div>
           <h2>Дәрес сылтамасы</h2>
           <p class="lead">Выберите урок и группу, затем отправьте готовую ссылку ученику.</p>
@@ -592,7 +601,7 @@
       app.querySelectorAll('.lesson-link').forEach(link => link.addEventListener('click', event => {
         event.preventDefault();
         const number = Number(new URL(link.href).searchParams.get('lesson'));
-        history.pushState({}, '', `?course=${currentCourse}&lesson=${number}${ruActive() ? '&lang=ru' : ''}`);
+        history.pushState({}, '', `?course=${currentCourse}&lesson=${number}${ruActive() ? '&lang=ru' : ''}${groupQuery}`);
         openLesson(number, currentCourse);
       }));
       updateLanguageChrome();

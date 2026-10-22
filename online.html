@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="tt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#125f52">
+  <title>Онлайн дәресләр — 1 нче курс</title>
+  <style>
+    :root { color-scheme:light; --ink:#173a33; --green:#126658; --line:#b7d6c9; --gold:#b88f54; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#f5f9f5; color:var(--ink); font:22px/1.5 Arial,"Noto Sans",sans-serif; }
+    header { padding:26px max(20px,calc((100vw - 760px)/2)); background:linear-gradient(115deg,#125f52,#348577); color:white; border-bottom:6px solid var(--gold); }
+    header p { margin:4px 0 0; font-size:21px; }
+    h1 { font:700 clamp(36px,6vw,58px)/1.1 Georgia,serif; margin:0; }
+    main { max-width:800px; margin:auto; padding:28px 20px 70px; }
+    .card { background:white; border:1px solid var(--line); border-radius:24px; padding:clamp(22px,5vw,42px); box-shadow:0 12px 30px #173a3312; }
+    .lead { margin:0 0 28px; color:#416057; }
+    label { display:block; margin:24px 0 8px; font-weight:700; }
+    select,button { width:100%; min-height:64px; border-radius:13px; font:inherit; }
+    select { padding:12px 16px; border:2px solid var(--line); background:white; color:var(--ink); }
+    button { margin-top:30px; padding:12px 22px; border:0; background:var(--green); color:white; font-weight:700; cursor:pointer; }
+    button:hover { background:#0b4d42; }
+    :focus-visible { outline:4px solid #8fd2b5; outline-offset:3px; }
+    .note { margin:26px 0 0; padding:16px 19px; border-left:5px solid var(--gold); background:#fff8e9; border-radius:8px; }
+    .error { color:#a4312f; font-weight:700; min-height:1.5em; }
+    [hidden] { display:none !important; }
+  </style>
+</head>
+<body>
+  <header><h1>Онлайн дәресләр</h1><p>1 нче курс · Фикһ һәм әхлак</p></header>
+  <main>
+    <section class="card" aria-labelledby="entryTitle">
+      <h2 id="entryTitle">Үз төркемегезне сайлагыз</h2>
+      <p class="lead">Төркемне бер тапкыр сайлагыз. Аннары фәннең дәресләренә күчә аласыз.</p>
+      <form id="entryForm">
+        <label for="language">Уку теле / Язык обучения</label>
+        <select id="language" required>
+          <option value="">Сайлагыз / Выберите</option>
+          <option value="tt">Татар төркеме</option>
+          <option value="ru">Русская группа</option>
+        </select>
+        <div id="readingWrap" hidden>
+          <label for="reading">Татар төркеме бүлеге</label>
+          <select id="reading">
+            <option value="">Сайлагыз</option>
+            <option value="reading">Укый белүчеләр · 1–12 нче төркемнәр</option>
+            <option value="starting">Укый белмәүчеләр · 13–24 нче төркемнәр</option>
+          </select>
+        </div>
+        <div id="groupWrap" hidden>
+          <label for="group">Төркем / Группа</label>
+          <select id="group" required></select>
+        </div>
+        <label for="subject">Фән / Предмет</label>
+        <select id="subject" required>
+          <option value="">Сайлагыз / Выберите</option>
+          <option value="fiqh">Фикһ / Фикх</option>
+          <option value="akhlaq">Әхлак / Ахляк</option>
+        </select>
+        <button type="submit">Дәресләрне ачарга / Открыть уроки</button>
+        <p id="error" class="error" role="alert"></p>
+      </form>
+      <p class="note">Исемегезне дәрес эчендә язасыз. Нәтиҗә үз төркемегезнең укытучысы журналына җибәрелә.<br>Имя вы укажете внутри урока. Результат поступит преподавателю вашей группы.</p>
+    </section>
+  </main>
+  <script>
+    const $ = id => document.getElementById(id);
+    const language = $('language'), reading = $('reading'), group = $('group');
+    function fillGroups() {
+      const isTatar = language.value === 'tt';
+      $('readingWrap').hidden = !isTatar;
+      reading.required = isTatar;
+      if (!isTatar) reading.value = '';
+      let first = 0, last = 0;
+      if (language.value === 'ru') { first = 1; last = 5; }
+      else if (reading.value === 'reading') { first = 1; last = 12; }
+      else if (reading.value === 'starting') { first = 13; last = 24; }
+      group.replaceChildren(new Option(language.value === 'ru' ? 'Выберите группу' : 'Төркемне сайлагыз', ''));
+      for (let number = first; number <= last; number++) {
+        group.add(new Option(language.value === 'ru' ? `${number} группа` : `${number} нче төркем`, String(number)));
+      }
+      $('groupWrap').hidden = last === 0;
+      $('error').textContent = '';
+    }
+    language.addEventListener('change', fillGroups);
+    reading.addEventListener('change', fillGroups);
+    $('entryForm').addEventListener('submit', event => {
+      event.preventDefault();
+      if (!$('entryForm').reportValidity()) return;
+      const number = Number(group.value);
+      const isTatar = language.value === 'tt';
+      const valid = isTatar
+        ? (reading.value === 'reading' && number >= 1 && number <= 12) || (reading.value === 'starting' && number >= 13 && number <= 24)
+        : language.value === 'ru' && number >= 1 && number <= 5;
+      if (!valid || !Number.isInteger(number)) {
+        $('error').textContent = 'Төркемне кабат тикшерегез / Проверьте группу.';
+        return;
+      }
+      const destination = $('subject').value === 'fiqh'
+        ? 'https://sajidaturseb.github.io/fiqh-test/'
+        : 'https://sajidaturseb.github.io/akhlaq-course/';
+      const url = new URL(destination);
+      url.searchParams.set('v', 'online-groups-20261022');
+      if ($('subject').value === 'akhlaq') url.searchParams.set('course', '1');
+      if (!isTatar) url.searchParams.set('lang', 'ru');
+      url.searchParams.set('group', `Онлайн 1 курс, ${isTatar ? 'татар' : 'рус'} — ${number} группа`);
+      location.assign(url.toString());
+    });
+  </script>
+</body>
+</html>
