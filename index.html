@@ -342,6 +342,9 @@
     #studentGroup option, #teacherGroup option { font-weight: 700; }
     #studentGroup optgroup, #teacherGroup optgroup { font-weight: 800; }
     .field .result-item b { font-size: 1.08rem; font-weight: 800; }
+    .student-form .field:first-child { margin-top: 10px; }
+    .student-group-picker .field { margin-top: 12px; }
+    .student-group-picker [hidden] { display: none; }
     .teacher-card .primary { width: 100%; margin-top: 18px; }
     .teacher-meta { min-height: 2.8em; margin: 13px 0 0; color: var(--muted); font: .88rem/1.45 Arial, sans-serif; }
     .teacher-status { min-height: 1.5em; margin: 11px 0 0; color: var(--emerald); text-align: center; font: 700 .86rem/1.4 Arial, sans-serif; }
@@ -512,25 +515,69 @@
     }
     function groupValues(courseNumber) {
       return [
-        {label: `${courseNumber} курс`, count: 8},
+        {label: `${courseNumber} курс`, count: courseNumber === 1 ? 7 : 8},
         {label: `Онлайн ${courseNumber} курс`, count: 10}
       ];
     }
+    const teacherGroup = 'Мөгаллимәләр';
     function allowedGroups(courseNumber) {
       const sections = groupValues(courseNumber);
       if (courseNumber === 1) sections.push(
         {label: 'Онлайн 1 курс, татар', count: 24},
         {label: 'Онлайн 1 курс, рус', count: 5}
       );
-      return new Set(sections.flatMap(({label, count}) =>
-        Array.from({length: count}, (_, index) => `${label} — ${index + 1} группа`)));
+      return new Set([...(courseNumber === 1 ? [teacherGroup] : []), ...sections.flatMap(({label, count}) =>
+        Array.from({length: count}, (_, index) => `${label} — ${index + 1} группа`))]);
     }
     function groupOptions(courseNumber, placeholder) {
       return `<option value="">${placeholder}</option>` + groupValues(courseNumber).map(({label, count}) =>
         `<optgroup label="${label}">${Array.from({length: count}, (_, index) => {
           const value = `${label} — ${index + 1} группа`;
           return `<option value="${value}">${value}</option>`;
-        }).join('')}</optgroup>`).join('');
+        }).join('')}</optgroup>`).join('') + (courseNumber === 1 ? `<option value="${teacherGroup}">${teacherGroup}</option>` : '');
+    }
+    function firstCourseGroupFields() {
+      return `<div class="student-group-picker">
+        <div class="field"><label for="studyPlace">${ruActive() ? 'Где вы учитесь?' : 'Кайсы төркемдә укыйсыз?'}</label>
+          <select id="studyPlace" required>
+            <option value="">${ruActive() ? 'Выберите' : 'Сайлагыз'}</option>
+            <option value="mosque">${ruActive() ? 'Группа мечети' : 'Мәчет төркеме'}</option>
+            <option value="online">${ruActive() ? 'Онлайн-группа' : 'Онлайн төркем'}</option>
+          </select></div>
+        <div class="field" id="onlineLanguageField" hidden><label for="onlineLanguage">${ruActive() ? 'Язык группы' : 'Уку теле'}</label>
+          <select id="onlineLanguage"><option value="">${ruActive() ? 'Выберите язык' : 'Телне сайлагыз'}</option>
+            <option value="татар">Татарча</option><option value="рус">Русский</option>
+          </select></div>
+        <div class="field" id="studentGroupField" hidden><label for="studentGroup">${ruActive() ? 'Группа' : 'Төркем'}</label>
+          <select id="studentGroup" name="studentGroup" required disabled><option value="">${ruActive() ? 'Выберите группу' : 'Төркемне сайлагыз'}</option></select></div>
+      </div>`;
+    }
+    function setupFirstCourseGroupFields() {
+      const place = document.getElementById('studyPlace');
+      if (!place) return;
+      const languageField = document.getElementById('onlineLanguageField');
+      const language = document.getElementById('onlineLanguage');
+      const groupField = document.getElementById('studentGroupField');
+      const group = document.getElementById('studentGroup');
+      const update = () => {
+        const online = place.value === 'online';
+        languageField.hidden = !online;
+        language.required = online;
+        if (!online) language.value = '';
+        const ready = place.value === 'mosque' || (online && Boolean(language.value));
+        groupField.hidden = !ready;
+        group.disabled = !ready;
+        const values = place.value === 'mosque'
+          ? [...Array.from({length: 7}, (_, index) => `1 курс — ${index + 1} группа`), teacherGroup]
+          : online && language.value
+            ? Array.from({length: language.value === 'татар' ? 24 : 5}, (_, index) => `Онлайн 1 курс, ${language.value} — ${index + 1} группа`)
+            : [];
+        group.innerHTML = `<option value="">${ruActive() ? 'Выберите группу' : 'Төркемне сайлагыз'}</option>`
+          + values.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value === teacherGroup ? value : value.split(' — ').at(-1))}</option>`).join('');
+      };
+      place.addEventListener('change', update);
+      language.addEventListener('change', update);
+      update();
     }
     const labels = {
       intro: 'Дәрес тексты һәм кабатлау',
@@ -707,7 +754,7 @@
           <p class="lead">Для записи результата в журнал укажите имя и выберите группу.</p>
           <form class="student-form" id="studentForm">
             <div class="field"><label for="studentName">Исем һәм фамилия</label><input id="studentName" name="studentName" maxlength="80" autocomplete="name" required></div>
-            ${assignedGroup ? `<div class="field"><label>Группа</label><div class="result-item"><b>${assignedGroup}</b></div></div>` : `<div class="field"><label for="studentGroup">Группа</label><select id="studentGroup" name="studentGroup" required>${groupOptions(currentCourse, 'Выберите группу')}</select></div>`}
+            ${assignedGroup ? `<div class="field"><label>Группа</label><div class="result-item"><b>${assignedGroup}</b></div></div>` : currentCourse === 1 ? firstCourseGroupFields() : `<div class="field"><label for="studentGroup">Группа</label><select id="studentGroup" name="studentGroup" required>${groupOptions(currentCourse, 'Выберите группу')}</select></div>`}
             <p class="form-note">После указания имени и группы можно начать тест.</p>
             <div class="actions"><button class="primary" type="submit">Тестны башларга</button></div>
           </form>
@@ -752,6 +799,7 @@
       app.innerHTML = lessonMarkup(lesson);
       updateLanguageChrome();
       translateUiTree(app);
+      setupFirstCourseGroupFields();
       if (ruActive()) {
         const reflectionInput = app.querySelector('#reflection');
         reflectionInput.setAttribute('aria-label', 'Мои мысли');
