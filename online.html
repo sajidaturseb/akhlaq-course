@@ -71,6 +71,8 @@
       $('readingWrap').hidden = !isTatar;
       reading.required = isTatar;
       if (!isTatar) reading.value = '';
+      const selectionKey = `${language.value}:${reading.value}`;
+      const previousGroup = group.dataset.selectionKey === selectionKey ? group.value : '';
       let first = 0, last = 0;
       if (language.value === 'ru') { first = 1; last = 5; }
       else if (reading.value === 'reading') { first = 1; last = 12; }
@@ -79,11 +81,14 @@
       for (let number = first; number <= last; number++) {
         group.add(new Option(language.value === 'ru' ? `${number} группа` : `${number} нче төркем`, String(number)));
       }
+      if (previousGroup && Number(previousGroup) >= first && Number(previousGroup) <= last) group.value = previousGroup;
+      group.dataset.selectionKey = selectionKey;
       $('groupWrap').hidden = last === 0;
       $('error').textContent = '';
     }
     language.addEventListener('change', fillGroups);
     reading.addEventListener('change', fillGroups);
+    window.addEventListener('pageshow', fillGroups);
     $('entryForm').addEventListener('submit', event => {
       event.preventDefault();
       if (!$('entryForm').reportValidity()) return;
