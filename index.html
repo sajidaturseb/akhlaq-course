@@ -949,7 +949,7 @@
 
     homeButton.addEventListener('click', () => showHome(currentCourse));
     languageSwitch.querySelectorAll('button').forEach(button => button.addEventListener('click', () => {
-      if ((currentCourse !== 1 && currentCourse !== 2) || currentLang === button.dataset.lang) return;
+      if ((currentCourse !== 1 && currentCourse !== 2 && currentCourse !== 3) || currentLang === button.dataset.lang) return;
       currentLang = button.dataset.lang;
       const url = new URL(location.href);
       if (currentLang === 'ru') url.searchParams.set('lang', 'ru');
