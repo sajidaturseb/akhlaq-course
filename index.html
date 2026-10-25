@@ -421,12 +421,13 @@
   <script src="lessons.js?v=akhlaq-ru-aligned-20261021"></script>
   <script src="course-2.js?v=akhlaq-course2-20261024"></script>
   <script src="course-3.js?v=akhlaq-course3-20261024"></script>
-  <script src="course-4.js"></script>
-  <script src="study-texts.js?v=akhlaq-course3-20261024"></script>
-  <script src="review-curated.js?v=akhlaq-course3-20261024"></script>
+  <script src="course-4.js?v=akhlaq-course4-20261025"></script>
+  <script src="study-texts.js?v=akhlaq-course4-20261025"></script>
+  <script src="review-curated.js?v=akhlaq-course4-20261025"></script>
   <script src="course-1-ru.js?v=akhlaq-ru-aligned-20261021"></script>
   <script src="course-2-ru.js?v=akhlaq-course2-20261024"></script>
   <script src="course-3-ru.js?v=akhlaq-course3-20261024"></script>
+  <script src="course-4-ru.js?v=akhlaq-course4-20261025"></script>
   <script src="config.js"></script>
   <script>
     const app = document.getElementById('app');
@@ -449,12 +450,13 @@
       }
     }
     let currentLang = new URLSearchParams(location.search).get('lang') === 'ru' ? 'ru' : 'tt';
-    function ruActive() { return currentLang === 'ru' && (currentCourse === 1 || currentCourse === 2 || currentCourse === 3); }
+    function ruActive() { return currentLang === 'ru' && (currentCourse === 1 || currentCourse === 2 || currentCourse === 3 || currentCourse === 4); }
     function displayLessons(courseNumber) {
       if (currentLang !== 'ru') return COURSES[courseNumber];
       const translated = Number(courseNumber) === 1 ? window.AKHLAQ_COURSE_1_RU :
         Number(courseNumber) === 2 ? window.AKHLAQ_COURSE_2_RU :
-        Number(courseNumber) === 3 ? window.AKHLAQ_COURSE_3_RU : null;
+        Number(courseNumber) === 3 ? window.AKHLAQ_COURSE_3_RU :
+        Number(courseNumber) === 4 ? window.AKHLAQ_COURSE_4_RU : null;
       return translated ? COURSES[courseNumber].map(item => ({...item, ...translated[item.n], n: item.n})) : COURSES[courseNumber];
     }
     const ruUi = new Map([
@@ -509,7 +511,7 @@
       }
     }
     function updateLanguageChrome() {
-      languageSwitch.hidden = currentCourse !== 1 && currentCourse !== 2 && currentCourse !== 3;
+      languageSwitch.hidden = currentCourse !== 1 && currentCourse !== 2 && currentCourse !== 3 && currentCourse !== 4;
       languageSwitch.querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.lang === currentLang)));
       document.documentElement.lang = ruActive() ? 'ru' : 'tt';
       document.querySelector('.brand-name').textContent = ruActive() ? 'Курс ахляка' : 'Әхлак курсы';
@@ -949,7 +951,7 @@
 
     homeButton.addEventListener('click', () => showHome(currentCourse));
     languageSwitch.querySelectorAll('button').forEach(button => button.addEventListener('click', () => {
-      if ((currentCourse !== 1 && currentCourse !== 2 && currentCourse !== 3) || currentLang === button.dataset.lang) return;
+      if ((currentCourse !== 1 && currentCourse !== 2 && currentCourse !== 3 && currentCourse !== 4) || currentLang === button.dataset.lang) return;
       currentLang = button.dataset.lang;
       const url = new URL(location.href);
       if (currentLang === 'ru') url.searchParams.set('lang', 'ru');
