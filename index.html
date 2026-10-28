@@ -798,7 +798,7 @@
           <div class="result-note"><b>Гамәли адым:</b> нәтиҗә балл белән генә бетми. Хәзер дәрестәге биремне тормышта башкару мөһим.</div>
           <p class="teacher-status pending" id="submissionStatus" role="status" aria-live="polite" aria-busy="true"></p>
           <button class="primary" id="retrySubmission" type="button" hidden>Кабат җибәрергә</button>
-          <div class="actions"><button class="primary" id="restart">Кабат үтәргә</button></div>
+          <div class="actions"><button class="primary" id="restart" hidden>Кабат үтәргә</button></div>
         </section>`;
     }
 
@@ -971,6 +971,7 @@
         if (!response.ok || !result.ok) throw new Error(result.error || 'request_failed');
         if (status) { status.classList.remove('pending'); status.setAttribute('aria-busy', 'false'); }
         if (status) status.textContent = ruActive() ? 'Ваша работа записана в журнале преподавателя.' : 'Эшегез укытучы журналына теркәлде.';
+        document.getElementById('restart').hidden = false;
       } catch (_) {
         submitted = false;
         if (status) { status.classList.remove('pending'); status.setAttribute('aria-busy', 'false'); }
